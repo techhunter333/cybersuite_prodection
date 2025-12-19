@@ -1,0 +1,938 @@
+/* =========================================
+   1. GLOBAL VARIABLES & RESET
+   ========================================= */
+:root {
+    /* --- LIGHT MODE DEFAULTS --- */
+    --bg-body: #f3f4f6;
+    --bg-card: #ffffff;
+     --auth-text-dark: #1f2937;
+      --auth-input-bg-light: white;
+    /* [FIX] Sidebar is now White in Light Mode */
+    --bg-sidebar: #ffffff; 
+    --sidebar-text-main: #1f2937; /* Dark text */
+    --sidebar-text-muted: #6b7280; /* Gray text */
+    --sidebar-border: #e5e7eb;
+    --sidebar-hover: #f3f4f6;
+
+    --text-main: #1f2937;
+    --text-muted: #6b7280;
+    
+    --accent: #6366f1;       
+    --accent-hover: #4f46e5;
+    --border: #e5e7eb;
+    
+    --input-bg: #ffffff;
+}
+
+html[data-theme="dark"] {
+    /* --- UNIFIED CORPORATE DARK THEME --- */
+    
+    /* 1. Backgrounds */
+    /* Sidebar and Inputs should use the darkest color for consistency */
+    --bg-body: #111827;       
+    --bg-sidebar: #0b0f19;    /* Slightly darker shade for depth, but close */
+    --input-bg: #111827;      /* Inputs match body */
+    --bg-card: #1f2937; 
+     --auth-input-bg-light: #f9fafb;      /* Cards are slightly lighter for contrast */
+    
+    /* Text */
+    --text-main: #f9fafb;     
+    --text-muted: #94a3b8;
+    --sidebar-text-main: #f9fafb; 
+    --sidebar-text-muted: #94a3b8; 
+    --sidebar-hover: #1f2937; /* Sidebar hover matches card background */
+
+    /* 2. Borders & Accents */
+    --border: #334155;        
+    --accent: #818cf8;        
+    --accent-hover: #a5b4fc;
+    --accent-glow: rgba(129, 140, 248, 0.2);
+    
+    --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+      --sidebar-border: rgba(0, 0, 0, 0);
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', 'Google Sans', 'Segoe UI', sans-serif;
+     background-color: var(--bg-body);
+    color: var(--text-main);
+    height: 100vh;
+    overflow: hidden;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+    transition: 0.2s ease;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* =========================================
+   2. AUTHENTICATION PAGES (SPLIT SCREEN LAYOUT)
+   ========================================= */
+
+.auth-body {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    overflow: hidden;
+    background-color: white; /* Default light background */
+}
+
+.split-container {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+}
+
+/* --- LEFT SIDE: BRANDING --- */
+.split-brand {
+    flex: 1;
+    background-color: #020617; /* Hardcoded deep black for branding */
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+    text-align: center;
+}
+
+.brand-content h1 {
+    font-size: 3rem;
+    font-weight: 800;
+    margin-bottom: 10px;
+    color: white;
+}
+
+.brand-content p {
+    color: #94a3b8;
+    font-size: 1.1rem;
+    max-width: 400px;
+    line-height: 1.6;
+}
+
+.brand-icon-large {
+    font-size: 6rem;
+    color: #818cf8; /* Lighter accent */
+    margin-bottom: 30px;
+}
+
+/* --- RIGHT SIDE: FORM (Scrollable) --- */
+.split-form {
+    flex: 1;
+    background-color: white; /* Force white background */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+    overflow-y: auto;
+}
+
+.auth-box {
+    width: 100%;
+    max-width: 420px;
+    margin: auto 0;
+}
+
+.auth-box h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1f2937; /* [THE FIX] Force dark text */
+    margin-bottom: 30px;
+    text-align: left;
+}
+
+/* Ensure labels and other text are also dark */
+.auth-box label {
+    color: #374151 !important;
+}
+.auth-box p, .auth-box span {
+    color: #6b7280 !important;
+}
+.auth-box a {
+    color: #6366f1 !important; /* Accent color for links */
+}
+
+/* =========================================
+   3. MAIN DASHBOARD LAYOUT & SIDEBAR
+   ========================================= */
+.app-container {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* --- SIDEBAR STRUCTURE --- */
+.sidebar {
+    width: 260px;
+    background-color: var(--bg-sidebar);
+    color: var(--sidebar-text-muted); /* [FIX] Dynamic Text Color */
+    display: flex;
+    flex-direction: column; 
+    padding: 20px;
+    flex-shrink: 0;
+     border-right: 1px solid var(--sidebar-border); /* [FIX] Dynamic Border */
+    transition: transform 0.3s ease, background-color 0.3s ease;
+    height: 100vh;
+    box-sizing: border-box;
+    z-index: 2000;
+}
+
+/* 1. Header (Brand + Profile) */
+.sidebar-top {
+    flex-shrink: 0;
+}
+
+.brand {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--sidebar-text-main);
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    gap: 10px; 
+}
+
+
+.brand i { color: var(--accent); }
+
+/* Mobile Close Button (Hidden on Desktop) */
+.mobile-close-btn {
+    display: none; 
+    background: none; border: none; 
+    color: var(--sidebar-text-main); /* [FIX] Visible on white/black */
+    font-size: 1.2rem; cursor: pointer;
+}
+
+/* 2. Menu (Grows to fill space) */
+.sidebar-menu {
+    flex-grow: 1; 
+    overflow-y: auto; 
+    margin-bottom: 20px;
+}
+
+/* 3. Footer (Logout) */
+.sidebar-footer {
+    flex-shrink: 0;
+    padding-top: 15px;
+    border-top: 1px solid var(--sidebar-border); /* [FIX] Dynamic Border */
+}
+
+.logout-link {
+    color: #ef4444 !important; 
+    background: rgba(239, 68, 68, 0.1);
+    justify-content: center;
+    font-weight: 600;
+}
+.logout-link:hover {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5 !important;
+}
+
+/* Profile */
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px;
+    background-color: var(--sidebar-hover); /* [FIX] Dynamic Background */
+    border-radius: 10px;
+    margin-bottom: 30px;
+    border: 1px solid var(--sidebar-border); /* [FIX] Dynamic Border */
+    overflow: hidden;
+}
+
+.avatar-circle {
+    width: 40px;
+    height: 40px;
+    background-color: var(--accent);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.user-details {
+    overflow: hidden;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.user-name {
+    display: block;
+    color: var(--sidebar-text-main); /* [FIX] Dynamic Text */
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.user-email {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--sidebar-text-muted); /* [FIX] Dynamic Text */
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+/* Menu */
+.menu-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    margin: 15px 0 10px 0;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: var(--sidebar-text-muted); /* [FIX] Dynamic Text */
+    white-space: nowrap;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px;
+    border-radius: 8px;
+    transition: 0.2s;
+    color: var(--sidebar-text-muted); /* [FIX] Dynamic Text */
+    margin-bottom: 5px;
+    white-space: nowrap;
+}
+
+.nav-link:hover {
+    background-color: var(--sidebar-hover); /* [FIX] Dynamic Hover */
+    color: var(--sidebar-text-main);        /* [FIX] Text darkens on hover */
+}
+
+.nav-link.active {
+    background-color: var(--sidebar-hover);
+    color: var(--accent); /* [FIX] Accent color for active state */
+    border-left: 3px solid var(--accent);
+}
+
+.nav-link i {
+    width: 20px;
+    text-align: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.logout { color: #ef4444; }
+.logout:hover { background-color: rgba(239, 68, 68, 0.15); color: #fca5a5; }
+
+/* Main Content */
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background-color: var(--bg-body);
+}
+
+.top-bar {
+    height: 64px;
+    background-color: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 30px;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+
+.page-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0;
+}
+
+.content-wrapper {
+    flex: 1;
+    padding: 30px;
+    overflow-y: auto;
+}
+
+/* =========================================
+   5. ALERTS & MESSAGES
+   ========================================= */
+.alert {
+    padding: 12px 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.alert.error { background-color: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+.alert.success { background-color: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+
+/* Password Checklist */
+.password-requirements {
+    margin-top: 10px;
+    padding: 15px;
+    background-color: #f9fafb;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    font-size: 0.85rem;
+    text-align: left;
+}
+.req-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    transition: color 0.2s;
+}
+.req-item i { font-size: 0.7rem; }
+.req-item.valid { color: #059669; font-weight: 600; }
+.req-item.valid i { color: #059669; }
+
+/* Activity Table */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: var(--bg-card);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border);
+}
+th, td { padding: 15px 20px; text-align: left; border-bottom: 1px solid var(--border); }
+th { background-color: #f9fafb; font-weight: 600; background-color: var(--input-bg); color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; }
+td { font-size: 0.95rem; color: var(--text-main); }
+tr:hover td { background-color: #f9fafb;  background-color: var(--table-hover); }
+
+/* =========================================
+   6. RESPONSIVE DESIGN (MOBILE & TABLET)
+   ========================================= */
+
+/* Mobile Navigation Buttons (Hidden on Desktop by default) */
+.mobile-nav-toggle { display: none; }
+.mobile-close-btn { display: none; }
+.mobile-brand { display: none; }
+
+
+
+
+
+
+
+/* --- Breakpoint for Tablets & Phones (< 900px) --- */
+@media (max-width: 900px) {
+    /* 1. Hide the left branding panel */
+    .split-brand { 
+        display: none; 
+    }
+    
+    /* 2. Make the right form panel take up the whole screen */
+    .split-form {
+        flex: 1;
+        background-color: var(--bg-sidebar); /* Dark background */
+        display: flex;
+        align-items: center; /* Center vertically */
+        justify-content: center; /* Center horizontally */
+        
+        /* [FIX] Remove padding from the wrapper */
+        padding: 0; 
+    }
+
+    /* 3. Style the card to have its own padding and not touch the edges */
+    .auth-box {
+        background-color: white;
+        width: 90%; /* Take up 90% of the screen width */
+        max-width: 450px;
+        padding: 40px 30px; /* Internal padding */
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        border: none;
+        margin: 20px 0; /* Add margin for scrolling space */
+    }
+
+    /* 4. Show the mobile logo */
+    .mobile-brand {
+        display: block;
+        text-align: center;
+        margin-bottom: 25px;
+    }
+    .mobile-brand i {
+        font-size: 4rem;
+        color: var(--accent);
+    }
+    
+    .auth-box h2 {
+        text-align: center;
+    }
+
+    /* === 2. DASHBOARD LAYOUT FIXES === */
+    
+    /* Show mobile-specific buttons */
+    .mobile-nav-toggle, .mobile-close-btn {
+        display: block;
+        background: none;
+        border: none;
+        color: var(--text-main);
+        font-size: 1.5rem;
+        cursor: pointer;
+    }
+    .mobile-close-btn { color: white; }
+
+    /* Make the sidebar an off-canvas menu */
+    .sidebar {
+        position: fixed;
+        left: -100%; /* Hide completely off-screen */
+        top: 0;
+        bottom: 0;
+        z-index: 2000;
+        width: 280px;
+        box-shadow: 5px 0 25px rgba(0,0,0,0.5);
+        transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .sidebar.open {
+        left: 0; /* Slide in */
+    }
+
+    /* Dark overlay for when the menu is open */
+    .overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.6);
+        z-index: 1500;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+    .overlay.active {
+        display: block;
+        opacity: 1;
+    }
+    
+    /* Adjust header for mobile */
+    .top-bar {
+        padding: 10px 20px;
+        justify-content: flex-start; /* Align hamburger to the left */
+    }
+    .page-title {
+        font-size: 1.1rem;
+    }
+}
+
+
+
+
+/* --- EDIT PROFILE LINK STYLE --- */
+.edit-profile-link {
+    font-size: 0.75rem;
+    color: var(--accent);
+    font-weight: 600;
+    margin-top: 2px;
+}
+
+.edit-profile-link:hover {
+    text-decoration: underline;
+}
+
+
+
+/* =========================================
+   DASHBOARD CARD GRID
+   ========================================= */
+.tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 25px;
+}
+
+.tool-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 25px;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.tool-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+    border-color: var(--accent);
+}
+
+.icon-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+}
+
+.icon-blue { background: #eff6ff; color: #3b82f6; }
+.icon-purple { background: #f5f3ff; color: #8b5cf6; }
+.icon-green { background: #f0fdf4; color: #22c55e; }
+.icon-red { background: #fef2f2; color: #ef4444; }
+
+.card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-main);
+    margin: 0 0 8px 0;
+}
+
+.card-desc {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 0;
+}
+
+
+
+/* =========================================
+   UNIVERSAL TOOL & FORM STYLES
+   ========================================= */
+
+.tool-wrapper {
+    background-color: var(--bg-card);
+    max-width: 800px;
+    margin: 0 auto; /* Centers the card horizontally */
+    padding: 40px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--text-main);
+    font-size: 0.9rem;
+}
+
+.form-control, input, select, textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+    transition: all 0.2s;
+    background-color: #f9fafb;
+    font-family: inherit;
+}
+
+.form-control:focus, input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    background-color: white;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+    background-color: var(--accent-hover);
+}
+
+
+
+/* =========================================
+   DASHBOARD ENHANCEMENTS
+   ========================================= */
+
+/* This styles the container for the right-side header actions */
+.dashboard-actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+/* This is the "Available Utilities" text inside the main content */
+.utilities-title {
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 1rem;
+    margin-bottom: 20px;
+}
+
+/* 1. Status Badge with Blinking Dot */
+.status-badge {
+    background: #dcfce7;
+    color: #166534;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid #bbf7d0;
+}
+
+.blinking-dot {
+    width: 10px;
+    height: 10px;
+    background-color: #22c55e; /* Green */
+    border-radius: 50%;
+    
+    /* Animation */
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+
+/* 2. Theme Toggle Button (Global Style used by base.html) */
+.theme-btn {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.2s;
+}
+
+.theme-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+
+/* =========================================
+   DARK THEME OVERRIDE FIX
+   ========================================= */
+
+/* This makes the rules more specific, forcing the browser to apply them */
+
+[data-theme="dark"] .form-control,
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+    background-color: var(--input-bg);
+    color: var(--text-main);
+    border-color: var(--border);
+}
+
+[data-theme="dark"] .form-control::placeholder,
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+    color: var(--text-muted);
+    opacity: 0.7;
+}
+
+[data-theme="dark"] .form-control:focus,
+[data-theme="dark"] input:focus,
+[data-theme="dark"] select:focus,
+[data-theme="dark"] textarea:focus {
+    background-color: var(--bg-card); /* Darker on focus */
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+/* Fix for specific tool toggles in Dark Mode */
+[data-theme="dark"] .operation-selector,
+[data-theme="dark"] .cipher-options-group {
+    background: var(--input-bg);
+    border-color: var(--border);
+}
+
+
+/* =========================================
+   *** FINAL FIX: AUTH INPUT ISOLATION ***
+   ========================================= */
+
+/* 1. Force Auth Card Inputs to stay Light */
+/* --- FIX: AUTH INPUTS MUST STAY LIGHT ON WHITE BACKGROUND --- */
+.auth-card .form-control,
+.auth-card input,
+.auth-card select,
+.auth-card textarea {
+    /* 1. Force light background */
+    background-color: var(--auth-input-bg-light) !important;
+    
+    /* 2. Force dark text */
+    color: var(--auth-text-dark) !important;
+    border-color: var(--border) !important;
+}
+
+/* 3. Fix placeholder and eye icons */
+.auth-card .form-control::placeholder,
+.auth-card input::placeholder,
+.auth-card textarea::placeholder,
+.auth-card .fa-eye,
+.auth-card .fa-eye-slash {
+    color: #94a3b8 !important; /* Muted dark gray */
+}
+
+/* 4. Fix labels and titles on the card body */
+.auth-card label,
+.auth-card h2,
+.auth-card a,
+.auth-card p {
+    color: var(--auth-text-dark) !important;
+}
+
+
+
+
+/* --- DASHBOARD FOOTER --- */
+.dashboard-footer {
+    margin-top: auto; /* Pushes to the bottom of the scrollable area */
+    padding: 20px 30px;
+    border-top: 1px solid var(--border);
+    background-color: var(--bg-card);
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0; /* Prevents it from shrinking */
+}
+
+.footer-links a {
+    color: var(--text-muted);
+    margin-left: 20px;
+}
+
+.footer-links a:hover {
+    color: var(--accent);
+}
+
+
+
+
+/* --- SEARCH BAR --- */
+.search-wrapper {
+    position: relative;
+    width: 250px; /* Width of the search bar */
+}
+
+.search-input {
+    width: 100%;
+    padding: 8px 15px 8px 40px; /* Left padding for icon */
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background-color: var(--bg-body);
+    color: var(--text-main);
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    background-color: var(--bg-card);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.search-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    pointer-events: none; /* Let clicks pass through to input */
+}
+
+/* Mobile Search Fix */
+@media (max-width: 600px) {
+    .dashboard-header-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    .dashboard-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+    .search-wrapper {
+        width: 100%; /* Full width on mobile */
+    }
+}
+
+
+/* Star Button */
+.fav-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: transparent;
+    border: none;
+    font-size: 1.2rem;
+    color: #9ca3af; /* Gray by default */
+    cursor: pointer;
+    z-index: 10; /* Above the card link */
+    transition: transform 0.2s;
+}
+
+.fav-btn:hover {
+    transform: scale(1.2);
+    color: #fbbf24; /* Gold on hover */
+}
+
+.fav-btn .fas {
+    color: #fbbf24; /* Solid star is gold */
+}
+
+/* Fix Card Layout */
+.tools-grid {
+    /* Ensure the wrapper doesn't break the grid */
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+.card-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+.card-wrapper .tool-card {
+    flex: 1; /* Ensure card fills height */
+}

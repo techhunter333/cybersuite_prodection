@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block header %}User Activity Log{% endblock %}
+{% block content %}
+    <table>
+        <thead>
+            <tr>
+                <th>Action</th>
+                <th>IP Address</th>
+                <th>Timestamp</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            <tr>
+                <td>{{ log.action }}</td>
+                <td>{{ log.ip_address }}</td>
+                <td>{{ log.timestamp }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{% block header %}Secure File Locker{% endblock %}
+{% block content %}
+    
+    <div class="tool-wrapper" style="max-width: 700px;">
+        
+        <div style="text-align: center; margin-bottom: 40px;">
+            <div style="font-size: 3.8rem; color: var(--accent); margin-bottom: 16px;">
+                <i class="fas fa-file-archive"></i>
+            </div>
+            <h1 style="margin: 0; color: var(--text-main); font-size: 2.4rem; font-weight: 800;">Secure File Locker</h1>
+            <p style="color: var(--text-muted); font-size: 1.2rem; margin-top: 8px;">
+                Encrypt and Decrypt Files using AES-GCM (Client-Side)
+            </p>
+        </div>
+
+        <form id="file-form" novalidate>
+            <div class="form-group file-drop-area">
+                <label for="fileToProcess" style="cursor: pointer; display: block;">
+                    <i class="fas fa-cloud-upload-alt" style="font-size: 2.8rem; color: var(--accent); display: block; margin-bottom: 12px;"></i>
+                    <span style="font-size: 1.2rem; font-weight: 600; color: var(--text-main);">Click to Select a File</span>
+                </label>
+                <input type="file" id="fileToProcess" name="fileToProcess" style="display: none;" required>
+                <p id="selected-filename" style="margin-top: 12px; color: var(--text-main); font-weight: 700; font-size: 1rem;"></p>
+            </div>
+
+            <div class="form-group">
+                <label for="password" style="font-weight: 700; margin-bottom: 12px; display: block;">Password</label>
+                <input type="password" id="password" name="password" class="form-control styled-input" required placeholder="Enter a strong password">
+            </div>
+
+            <div class="operation-group">
+                <button type="button" id="encrypt-btn" class="btn-primary">
+                    <i class="fas fa-lock"></i> Encrypt File
+                </button>
+                <button type="button" id="decrypt-btn" class="btn-primary decrypt-btn">
+                    <i class="fas fa-unlock"></i> Decrypt File
+                </button>
+            </div>
+        </form>
+
+        <div id="status-area" style="margin-top: 30px;">
+            <div id="loading-spinner-file" class="spinner" style="display: none;"></div>
+            <p id="status-message-file" style="text-align: center; font-weight: 700; color: var(--accent); font-size: 1.1rem; margin-top: 16px;"></p>
+            
+            <div id="progress-container" style="display:none; width: 100%; background: var(--bg-body); height: 32px; border-radius: 16px; overflow: hidden; margin-top: 20px; border: 1px solid var(--border);">
+                <div id="progress-bar" style="width: 0%; height: 100%; background: var(--accent); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; transition: width 0.4s ease;">0%</div>
+            </div>
+
+            <p id="error-message-file" class="alert error" style="display: none; margin-top: 20px;"></p>
+        </div>
+        
+        <div class="instructions">
+            <h4 style="color: var(--text-main); font-weight: 700; margin-bottom: 16px;">
+                <i class="fas fa-info-circle" style="color: var(--accent); margin-right: 10px;"></i> Instructions
+            </h4>
+            <ul>
+                <li><strong>Privacy:</strong> All encryption/decryption happens 100% in your browser — no data leaves your device.</li>
+                <li><strong>Encrypt:</strong> Select any file → Enter strong password → Click "Encrypt File" → Download encrypted version.</li>
+                <li><strong>Decrypt:</strong> Select a previously encrypted (.enc) file → Enter same password → Click "Decrypt File".</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Fixed & Compact CSS -->
+    <style>
+        /* Smaller File Drop Area - Matches Your Screenshot */
+        .file-drop-area {
+            border: 2px dashed var(--border);
+            padding: 40px 20px;
+            text-align: center;
+            border-radius: 20px;
+            background: var(--bg-body);
+            transition: all 0.3s ease;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+
+        .file-drop-area:hover {
+            border-color: var(--accent);
+            background: rgba(99,102,241,0.05);
+        }
+
+        /* Password Input */
+        .styled-input {
+            padding: 16px 20px;
+            font-size: 1.05rem;
+            border-radius: 16px;
+            background: var(--bg-body);
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            transition: all 0.3s ease;
+        }
+
+        .styled-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(99,102,241,0.15);
+        }
+
+        /* Operation Buttons - Pill Shape with Icon Left */
+        .operation-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        #encrypt-btn, #decrypt-btn {
+            padding: 16px 24px;
+            font-size: 1.05rem;
+            font-weight: 700;
+            border-radius: 50px; /* Pill shape */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+        }
+
+        #encrypt-btn {
+            background: var(--accent);
+        }
+
+        #encrypt-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(99,102,241,0.3);
+        }
+
+        .decrypt-btn {
+            background: #10b981 !important;
+        }
+
+        .decrypt-btn:hover {
+            background: #059669 !important;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(16,185,129,0.3);
+        }
+
+        /* Progress Bar */
+        #progress-container {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+
+        #progress-bar {
+            font-size: 0.95rem;
+        }
+
+        /* Instructions */
+        .instructions {
+            margin-top: 40px;
+            padding: 24px;
+            background: var(--bg-body);
+            border-radius: 16px;
+            border-left: 4px solid var(--accent);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+
+        .instructions h4 {
+            font-size: 1.2rem;
+            margin-bottom: 14px;
+        }
+
+        .instructions ul {
+            padding-left: 20px;
+            line-height: 1.7;
+            font-size: 0.95rem;
+        }
+
+        .instructions li {
+            margin-bottom: 10px;
+        }
+
+        /* Spinner */
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s ease-in-out infinite;
+            margin: 30px auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('file_encryptor.static', filename='script.js') }}"></script>
+{% endblock %}

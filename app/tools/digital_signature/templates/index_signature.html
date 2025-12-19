@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+
+{% block header %}Digital Signature (HMAC){% endblock %}
+{% block content %}
+    
+    <div class="tool-wrapper" style="max-width: 700px;">
+        
+        <div style="text-align: center; margin-bottom: 40px;">
+            <div style="font-size: 3.8rem; color: var(--accent); margin-bottom: 16px;">
+                <i class="fas fa-signature"></i>
+            </div>
+            <h2 style="margin: 0; color: var(--text-main); font-size: 2.4rem; font-weight: 800;">HMAC Digital Signature</h2>
+            <p style="color: var(--text-muted); font-size: 1.2rem; margin-top: 8px;">
+                Sign and Verify data integrity using HMAC-SHA256
+            </p>
+        </div>
+
+        <form id="signature-form" novalidate>
+            <div class="form-group">
+                <label style="font-weight: 700; margin-bottom: 12px; display: block;">Input Type:</label>
+                <div class="radio-group">
+                    <input type="radio" id="inputTypeText" name="inputType" value="text" checked>
+                    <label for="inputTypeText">Text</label>
+                    <input type="radio" id="inputTypeFile" name="inputType" value="file">
+                    <label for="inputTypeFile">File</label>
+                </div>
+            </div>
+
+            <div id="text-input-area" class="form-group">
+                <label for="inputText" style="font-weight: 700; margin-bottom: 12px; display: block;">Input Text:</label>
+                <textarea id="inputText" name="inputText" class="form-control styled-textarea" rows="8" placeholder="Enter text..."></textarea>
+            </div>
+            <div id="file-input-area" class="form-group" style="display: none;">
+                <label for="inputFile" style="font-weight: 700; margin-bottom: 12px; display: block;">Select File:</label>
+                <input type="file" id="inputFile" name="inputFile" class="form-control styled-file-input">
+                <p id="selected-sig-filename" style="margin-top: 10px; color: var(--text-main); font-weight: 700; font-size: 1rem;"></p>
+            </div>
+            
+            <div class="form-group">
+                <label for="secretKey" style="font-weight: 700; margin-bottom: 12px; display: block;">Shared Secret Key:</label>
+                <input type="password" id="secretKey" name="secretKey" class="form-control styled-input" required placeholder="Enter key..." autocomplete="off">
+            </div>
+
+            <div class="tabs">
+                <button type="button" class="tab-link active" data-tab="sign-options-content" data-op="sign">Sign Data</button>
+                <button type="button" class="tab-link" data-tab="verify-options-content" data-op="verify">Verify Signature</button>
+            </div>
+            <input type="hidden" id="operation" name="operation" value="sign">
+
+            <div id="sign-options-content" class="tab-content active"></div>
+            <div id="verify-options-content" class="tab-content">
+                <div class="form-group">
+                    <label for="signatureToVerify" style="font-weight: 700; margin-bottom: 12px; display: block;">Signature to Verify (Hex):</label>
+                    <input type="text" id="signatureToVerify" name="signatureToVerify" class="form-control styled-input" placeholder="Paste signature...">
+                </div>
+            </div>
+
+            <button type="button" id="process-sig-btn" class="btn-primary full-width">
+                <i class="fas fa-pen-fancy"></i> <span>Process (Sign)</span>
+            </button>
+        </form>
+
+        <div id="status-area-sig" style="margin-top: 30px; text-align: center;">
+            <div id="loading-spinner-sig" class="spinner" style="display: none;"></div>
+            <p id="error-message-sig" class="alert error" style="display: none;"></p>
+        </div>
+        
+        <div id="results-area-sig" class="result-section" style="display: none;">
+            <h3 style="font-size: 1.4rem; margin-bottom: 20px; color: var(--text-main);">
+                <i class="fas fa-poll"></i> Results:
+            </h3>
+            <p><strong>Operation:</strong> <span id="result-operation" style="color: var(--accent); font-weight: 700;"></span></p>
+            <p><strong>Data Hash (SHA-256):</strong> <code id="result-data-hash" class="code-block"></code></p>
+            <div id="signature-result-group">
+                <p><strong>Signature (HMAC-SHA256):</strong> <code id="result-signature" class="code-block"></code></p>
+                <button type="button" id="copy-signature-btn" class="btn-secondary" style="display:none;">Copy Signature</button>
+            </div>
+            <div id="verification-status-group" style="display:none;">
+                <p><strong>Verification Status:</strong> <span id="result-verification-status" class="status-text"></span></p>
+            </div>
+            <p id="result-message-text" class="info-text" style="margin-top: 16px; font-size: 1rem;"></p>
+        </div>
+        
+        <div class="instructions">
+            <h4 style="color: var(--text-main); font-weight: 700; margin-bottom: 16px;">
+                <i class="fas fa-info-circle" style="color: var(--accent); margin-right: 10px;"></i> How It Works (Zero-Knowledge)
+            </h4>
+            <ul>
+                <li>All cryptographic operations happen entirely in your browser.</li>
+                <li><strong>Signing:</strong> Generates a unique HMAC-SHA256 signature using your secret key.</li>
+                <li><strong>Verifying:</strong> Re-calculates the signature and compares it — valid only with the correct key.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Fixed Colors for Tabs & Process Button -->
+    <style>
+        /* Tabs - Distinct Colors */
+        .tabs {
+            display: flex;
+            background: var(--bg-body);
+            padding: 8px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            margin: 32px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            overflow: hidden;
+        }
+
+        .tab-link {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 1.05rem;
+            cursor: pointer;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .tab-link:hover {
+            color: var(--text-main);
+        }
+
+        /* Sign Data Tab - Red/Orange when active */
+        .tab-link[data-op="sign"].active {
+            background: #f87171; /* red-400 */
+            color: white;
+            box-shadow: 0 4px 12px rgba(248,113,113,0.4);
+        }
+
+        /* Verify Signature Tab - Purple/Blue when active */
+        .tab-link[data-op="verify"].active {
+            background: #818cf8; /* indigo-400 */
+            color: white;
+            box-shadow: 0 4px 12px rgba(129,140,248,0.4);
+        }
+
+        /* Process Button - Changes color based on active tab */
+        #process-sig-btn {
+            padding: 18px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            border-radius: 16px;
+            box-shadow: 0 8px 20px rgba(99,102,241,0.3);
+            transition: all 0.3s ease;
+            background: #f87171; /* Default: Sign (red) */
+        }
+
+        /* When Verify tab is active */
+        body.verify-mode #process-sig-btn,
+        .tab-link[data-op="verify"].active ~ #process-sig-btn {
+            background: #818cf8 !important; /* indigo */
+            box-shadow: 0 8px 20px rgba(129,140,248,0.3);
+        }
+
+        #process-sig-btn:hover {
+            transform: translateY(-3px);
+        }
+
+        /* Rest of styles unchanged */
+        .radio-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .radio-group input[type="radio"] { display: none; }
+
+        .radio-group label {
+            padding: 14px 28px;
+            border: 1px solid var(--border);
+            background: var(--bg-body);
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+
+        .radio-group input[type="radio"]:checked + label {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+            box-shadow: 0 6px 16px rgba(99,102,241,0.3);
+        }
+
+        .styled-textarea, .styled-input {
+            padding: 18px 24px;
+            font-size: 1.1rem;
+            border-radius: 16px;
+            background: var(--bg-body);
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            transition: all 0.3s ease;
+        }
+
+        .styled-textarea:focus, .styled-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(99,102,241,0.15);
+        }
+
+        .result-section {
+            margin-top: 40px;
+            padding: 32px;
+            background: var(--bg-body);
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+        }
+
+        .code-block {
+            background: var(--bg-card);
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            word-break: break-all;
+            display: block;
+            margin: 12px 0;
+            border: 1px solid var(--border);
+        }
+
+        .instructions {
+            margin-top: 50px;
+            padding: 28px;
+            background: var(--bg-body);
+            border-radius: 20px;
+            border-left: 4px solid var(--accent);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 6px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1.2s ease-in-out infinite;
+            margin: 40px auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('digital_signature.static', filename='script.js') }}"></script>
+    <!-- Optional: Add JS to sync Process button color with active tab -->
+    <script>
+        document.querySelectorAll('.tab-link').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const op = this.getAttribute('data-op');
+                const btn = document.getElementById('process-sig-btn');
+                const span = btn.querySelector('span');
+                
+                if (op === 'sign') {
+                    btn.style.background = '#f87171';
+                    span.textContent = 'Process (Sign)';
+                } else {
+                    btn.style.background = '#818cf8';
+                    span.textContent = 'Process (Verify)';
+                }
+            });
+        });
+    </script>
+{% endblock %}

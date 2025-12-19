@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% block header %}IP Subnet Calculator{% endblock %}
+
+{% block content %}
+<div class="tool-wrapper" style="max-width: 800px;">
+    
+    <div style="text-align: center; margin-bottom: 30px;">
+        <div style="font-size: 3rem; color: var(--accent); margin-bottom: 10px;"><i class="fas fa-network-wired"></i></div>
+        <h2>IP Subnet Calculator</h2>
+        <p style="color: var(--text-muted);">Calculate CIDR, masks, and IP ranges.</p>
+    </div>
+
+    <div class="form-group">
+        <label>IP Address / CIDR</label>
+        <div style="display: flex; gap: 10px;">
+            <input type="text" id="ipInput" class="form-control" placeholder="e.g., 192.168.1.1" value="192.168.1.1">
+            <select id="cidrSelect" class="form-control" style="width: 100px;">
+                <!-- JS will populate options 1-32 -->
+            </select>
+        </div>
+        <button id="calcBtn" class="btn-primary" style="margin-top: 15px;">Calculate</button>
+    </div>
+
+    <div id="results" style="display: none; margin-top: 30px;">
+        <table class="result-table">
+            <tr><th>Network Address</th><td id="res-network"></td></tr>
+            <tr><th>Broadcast Address</th><td id="res-broadcast"></td></tr>
+            <tr><th>Subnet Mask</th><td id="res-mask"></td></tr>
+            <tr><th>First Usable IP</th><td id="res-first"></td></tr>
+            <tr><th>Last Usable IP</th><td id="res-last"></td></tr>
+            <tr><th>Total Hosts</th><td id="res-hosts"></td></tr>
+            <tr><th>Usable Hosts</th><td id="res-usable"></td></tr>
+            <tr><th>IP Class</th><td id="res-class"></td></tr>
+            <tr><th>Binary IP</th><td id="res-binary" style="font-family: monospace;"></td></tr>
+        </table>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const cidrSelect = document.getElementById('cidrSelect');
+        const ipInput = document.getElementById('ipInput');
+        const btn = document.getElementById('calcBtn');
+        const resultsDiv = document.getElementById('results');
+
+        // Populate CIDR dropdown
+        for(let i=1; i<=32; i++) {
+            let opt = document.createElement('option');
+            opt.value = i;
+            opt.text = '/' + i;
+            if(i === 24) opt.selected = true;
+            cidrSelect.appendChild(opt);
+        }
+
+        btn.addEventListener('click', calculate);
+
+        function calculate() {
+            const ip = ipInput.value.trim();
+            const cidr = parseInt(cidrSelect.value);
+            
+            if(!validateIP(ip)) {
+                alert("Invalid IP Address");
+                return;
+            }
+
+            const ipBin = ipToBinary(ip);
+            const maskBin = cidrToBinary(cidr);
+            const netBin = applyMask(ipBin, maskBin);
+            const broadBin = getBroadcast(netBin, cidr);
+
+            // Update UI
+            document.getElementById('res-network').textContent = binaryToIp(netBin);
+            document.getElementById('res-broadcast').textContent = binaryToIp(broadBin);
+            document.getElementById('res-mask').textContent = binaryToIp(maskBin);
+            document.getElementById('res-first').textContent = getFirstUsable(netBin);
+            document.getElementById('res-last').textContent = getLastUsable(broadBin);
+            
+            const totalHosts = Math.pow(2, 32 - cidr);
+            document.getElementById('res-hosts').textContent = totalHosts.toLocaleString();
+            document.getElementById('res-usable').textContent = (totalHosts > 2 ? totalHosts - 2 : 0).toLocaleString();
+            
+            document.getElementById('res-class').textContent = getIpClass(parseInt(ip.split('.')[0]));
+            document.getElementById('res-binary').textContent = formatBinary(ipBin);
+
+            resultsDiv.style.display = 'block';
+        }
+
+        // --- Helpers ---
+        function validateIP(ip) {
+            return /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(ip);
+        }
+        function ipToBinary(ip) {
+            return ip.split('.').map(octet => parseInt(octet).toString(2).padStart(8, '0')).join('');
+        }
+        function binaryToIp(bin) {
+            return bin.match(/.{8}/g).map(byte => parseInt(byte, 2)).join('.');
+        }
+        function cidrToBinary(cidr) {
+            return '1'.repeat(cidr).padEnd(32, '0');
+        }
+        function applyMask(ipBin, maskBin) {
+            let net = '';
+            for(let i=0; i<32; i++) net += (ipBin[i] === '1' && maskBin[i] === '1') ? '1' : '0';
+            return net;
+        }
+        function getBroadcast(netBin, cidr) {
+            return netBin.substring(0, cidr) + '1'.repeat(32 - cidr);
+        }
+        function getFirstUsable(netBin) {
+            let num = parseInt(netBin, 2) + 1;
+            return intToIp(num);
+        }
+        function getLastUsable(broadBin) {
+            let num = parseInt(broadBin, 2) - 1;
+            return intToIp(num);
+        }
+        function intToIp(int) {
+            return [ (int>>>24)&255, (int>>>16)&255, (int>>>8)&255, int&255 ].join('.');
+        }
+        function getIpClass(firstOctet) {
+            if(firstOctet < 128) return 'A';
+            if(firstOctet < 192) return 'B';
+            if(firstOctet < 224) return 'C';
+            if(firstOctet < 240) return 'D (Multicast)';
+            return 'E (Experimental)';
+        }
+        function formatBinary(bin) {
+            return bin.match(/.{8}/g).join('.');
+        }
+    });
+</script>
+
+<style>
+    .result-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    .result-table th, .result-table td { padding: 12px; border-bottom: 1px solid var(--border); text-align: left; }
+    .result-table th { background: var(--bg-body); color: var(--text-muted); width: 40%; }
+
+    /* ONLY CHANGE: Pill shape + glow for Calculate button */
+    #calcBtn {
+        padding: 16px 32px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        border-radius: 50px !important; /* Full pill shape */
+        box-shadow: 0 8px 20px rgba(99,102,241,0.3); /* Premium glow */
+        transition: all 0.3s ease;
+    }
+
+    #calcBtn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 28px rgba(99,102,241,0.4);
+    }
+</style>
+{% endblock %}

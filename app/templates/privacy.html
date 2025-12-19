@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block header %}Privacy Policy{% endblock %}
+{% block content %}
+    
+    <div class="tool-wrapper" style="max-width: 800px;">
+        
+        <div style="text-align: center; margin-bottom: 40px;">
+            <div style="font-size: 3.8rem; color: var(--accent); margin-bottom: 16px;">
+                <i class="fas fa-user-shield"></i>
+            </div>
+            <h2 style="margin: 0; color: var(--text-main); font-size: 2.4rem; font-weight: 800;">Privacy Policy</h2>
+            <p style="color: var(--text-muted); font-size: 1.2rem; margin-top: 8px;">
+                Last Updated: December 17, 2025
+            </p>
+        </div>
+
+        <div class="privacy-content">
+            <h3>Our Commitment to Your Privacy</h3>
+            <p>CyberSuite is built on a "Zero-Knowledge" architecture. Our primary goal is to provide you with powerful security tools without ever needing to see, store, or handle your sensitive data.</p>
+            
+            <h4>1. Client-Side Processing</h4>
+            <p>The vast majority of our tools, including the **CryptoGuard, Password Generator, Cipher Utility, Digital Signature, File Encryptor, Hashing Utility, and Steganography tools**, operate entirely within your browser. Your text, files, passwords, and secret keys are processed locally on your device and are never sent to our servers.</p>
+
+            <h4>2. Secure Pastebin</h4>
+            <p>Our Secure Pastebin is designed to be Zero-Knowledge. When you create a paste, the content is encrypted in your browser using a randomly generated key. Only the encrypted text is stored on our server. The decryption key is part of the URL fragment (the part after the `#`), which your browser never sends to our server. We cannot read your pastes.</p>
+
+            <h4>3. Server-Side Tools (The Exceptions)</h4>
+            <p>A few tools require server interaction to function due to browser security limitations (CORS):</p>
+            <ul>
+                <li><strong>Threat Indicator Lookup:</strong> The indicator you submit (IP, domain, hash) is sent to our server, which then queries public APIs like VirusTotal. We do not log or store these lookup requests.</li>
+                <li><strong>URL Redirect Tracer:</strong> The URL you submit is sent to our server so it can follow the redirect chain. These requests are not logged.</li>
+                <li><strong>Threat News Viewer:</strong> Our server periodically fetches public RSS feeds to provide you with the latest news. No personal data is involved in this process.</li>
+            </ul>
+
+            <h4>4. Account Information</h4>
+            <p>We store your username, email, and a securely hashed version of your password to manage your account. We will never share your email address with third parties.</p>
+            
+            <h4>5. Activity Logging</h4>
+            <p>To provide security auditing for your own account, we log basic actions like "User Logged In" or "Profile Updated," along with the timestamp and IP address. This data is only visible to you on your Activity Log page.</p>
+        </div>
+    </div>
+
+    <!-- Premium Privacy Policy CSS -->
+    <style>
+        .privacy-content {
+            background: var(--bg-body);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+            font-size: 1.05rem;
+            line-height: 1.8;
+            color: var(--text-main);
+        }
+
+        .privacy-content h3 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin: 0 0 24px 0;
+            padding-bottom: 16px;
+            border-bottom: 3px solid var(--accent);
+            display: inline-block;
+        }
+
+        .privacy-content h4 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .privacy-content p {
+            color: var(--text-muted);
+            margin-bottom: 24px;
+            font-size: 1.05rem;
+        }
+
+        .privacy-content ul {
+            padding-left: 28px;
+            margin: 20px 0;
+            list-style: disc;
+        }
+
+        .privacy-content li {
+            margin-bottom: 16px;
+            color: var(--text-muted);
+            line-height: 1.7;
+        }
+
+        .privacy-content li strong {
+            color: var(--text-main);
+        }
+    </style>
+{% endblock %}

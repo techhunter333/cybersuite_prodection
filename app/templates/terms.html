@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block header %}Terms of Service{% endblock %}
+{% block content %}
+    
+    <div class="tool-wrapper" style="max-width: 800px;">
+        
+        <div style="text-align: center; margin-bottom: 40px;">
+            <div style="font-size: 3.8rem; color: var(--accent); margin-bottom: 16px;">
+                <i class="fas fa-file-contract"></i>
+            </div>
+            <h2 style="margin: 0; color: var(--text-main); font-size: 2.4rem; font-weight: 800;">Terms of Service</h2>
+            <p style="color: var(--text-muted); font-size: 1.2rem; margin-top: 8px;">
+                Please read these terms carefully.
+            </p>
+        </div>
+
+        <div class="terms-content">
+            <h3>1. Educational Purpose</h3>
+            <p>CyberSuite ("the Service") is provided strictly for educational and demonstration purposes. It is designed to teach and showcase cybersecurity concepts in a hands-on environment. It is not intended for commercial use or for securing mission-critical, real-world sensitive data.</p>
+
+            <h3>2. No Warranty</h3>
+            <p>The Service is provided "as is," without any warranties of any kind, express or implied. While we strive to follow security best practices, we make no guarantees regarding the uptime, reliability, or absolute security of the Service. Use at your own risk.</p>
+
+            <h3>3. Limitation of Liability</h3>
+            <p>In no event shall the creators of CyberSuite be liable for any claim, damages, or other liability, including any loss of data, arising from or in connection with the use of the Service. You are solely responsible for the data you process with these tools.</p>
+            
+            <h3>4. Prohibited Use</h3>
+            <p>You agree not to use the Service for any illegal or malicious activities. This includes, but is not limited to, attempting to crack hashes you do not own, performing reconnaissance on systems without authorization, or distributing malware via the Pastebin or Steganography tools.</p>
+        </div>
+    </div>
+
+    <!-- Premium Terms of Service CSS -->
+    <style>
+        .terms-content {
+            background: var(--bg-body);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+            font-size: 1.05rem;
+            line-height: 1.8;
+            color: var(--text-main);
+        }
+
+        .terms-content h3 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin: 40px 0 16px 0;
+            padding-bottom: 12px;
+            border-bottom: 3px solid var(--accent);
+            display: inline-block;
+        }
+
+        .terms-content h3:first-child {
+            margin-top: 0;
+        }
+
+        .terms-content p {
+            color: var(--text-muted);
+            margin-bottom: 24px;
+            font-size: 1.05rem;
+        }
+    </style>
+{% endblock %}

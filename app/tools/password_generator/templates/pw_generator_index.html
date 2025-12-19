@@ -1,0 +1,286 @@
+{% extends "base.html" %}
+{% block header %}Secure Password Generator{% endblock %}
+{% block content %}
+    
+    <div class="tool-wrapper" style="max-width: 650px;">
+        
+        <div style="text-align: center; margin-bottom: 30px;">
+            <div style="font-size: 3rem; color: var(--accent); margin-bottom: 10px;"><i class="fas fa-asterisk"></i></div>
+            <h2>Password Generator</h2>
+            <p style="color: var(--text-muted);">Generate high-entropy passwords</p>
+        </div>
+
+        <!-- Result Box -->
+        <div class="form-group result-group">
+            <input type="text" id="generated-password" class="form-control" readonly value="..." placeholder="Generated Password">
+            <button type="button" class="copy-icon-btn" id="copy-password-btn" title="Copy">
+                <i class="fas fa-copy"></i>
+            </button>
+        </div>
+
+        <!-- Strength Indicator -->
+        <div id="strength-bar" class="strength-indicator-bar"></div>
+        <div id="strength-text" class="strength-text-display"></div>
+
+        <!-- Slider -->
+        <div class="slider-container">
+            <div class="range-label">
+                <span>Password Length</span>
+                <span id="length-value" style="color: var(--accent); font-size: 1.2rem; font-weight: 700;">16</span>
+            </div>
+            <input type="range" id="password-length" min="8" max="64" value="16">
+            <!-- Generate Button -->
+            <button type="button" id="generate-btn" class="btn-primary" style="margin-top: 15px;">
+                <i class="fas fa-sync-alt"></i> <span>Generate Password</span>
+            </button>
+        </div>
+
+        <!-- Checkboxes -->
+        <div class="options-grid">
+            <label class="checkbox-label">
+                <input type="checkbox" id="include-uppercase" checked> <span>Include Uppercase (A-Z)</span>
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox" id="include-lowercase" checked> <span>Include Lowercase (a-z)</span>
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox" id="include-numbers" checked> <span>Include Numbers (0-9)</span>
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox" id="include-symbols" checked> <span>Include Symbols (!@#$)</span>
+            </label>
+            <label class="checkbox-label" style="grid-column: 1/-1;">
+                <input type="checkbox" id="exclude-ambiguous"> <span>Exclude Ambiguous (I, l, 1, O, 0)</span>
+            </label>
+        </div>
+    </div>
+    
+    <!-- Enhanced Custom CSS - More Beautiful & Consistent with Your Main CSS -->
+    <style>
+        /* Result Group - Larger, Softer Password Field */
+        .result-group {
+            position: relative;
+            margin-bottom: 30px;
+        }
+
+        .result-group .form-control {
+            padding: 18px 60px 18px 20px;
+            font-size: 1.1rem;
+            text-align: center;
+            background-color: var(--bg-body);
+            border-radius: 16px;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+
+        .result-group .form-control:focus {
+            background-color: var(--bg-card);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15), inset 0 2px 6px rgba(0,0,0,0.05);
+        }
+
+        /* Copy Button - Larger & More Visible */
+        .copy-icon-btn {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        .copy-icon-btn:hover {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+            transform: translateY(-50%) scale(1.05);
+        }
+
+        /* Strength Text - Bolder & Better Positioned */
+        .strength-text-display {
+            text-align: right;
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            margin-bottom: 30px;
+            transition: color 0.4s ease;
+        }
+
+        /* Slider Container - Elevated Card Style */
+        .slider-container {
+            background: var(--bg-card);
+            padding: 28px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+
+        .range-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-weight: 600;
+            color: var(--text-main);
+            font-size: 1.05rem;
+        }
+
+        /* Premium Slider */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 12px;
+            background: transparent;
+            border-radius: 12px;
+            margin: 20px 0;
+            outline: none;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-runnable-track {
+            height: 12px;
+            background: var(--border);
+            border-radius: 12px;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.08);
+        }
+
+        input[type="range"]::-moz-range-track {
+            height: 12px;
+            background: var(--border);
+            border-radius: 12px;
+            border: none;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.08);
+        }
+
+        input[type="range"] {
+            background: linear-gradient(to right, 
+                var(--accent) 0%, 
+                var(--accent) 0%, 
+                var(--border) 0%, 
+                var(--border) 100%);
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 32px;
+            width: 32px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: 5px solid var(--bg-card);
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+            margin-top: -10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            height: 24px;
+            width: 24px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: 5px solid var(--bg-card);
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+            cursor: pointer;
+        }
+
+        input[type="range"]:hover::-webkit-slider-thumb,
+        input[type="range"]:active::-webkit-slider-thumb {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+        }
+
+        /* Generate Button - More Prominent */
+        #generate-btn {
+            padding: 16px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        #generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        /* Checkboxes - Larger & Smoother */
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-bottom: 20px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            cursor: pointer;
+            padding: 16px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            color: var(--text-main);
+            font-weight: 500;
+            background: var(--bg-body);
+            border: 1px solid var(--border);
+        }
+
+        .checkbox-label:hover {
+            background: rgba(99, 102, 241, 0.05);
+            border-color: var(--accent);
+            transform: translateY(-1px);
+        }
+
+        input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            accent-color: var(--accent);
+            cursor: pointer;
+            border-radius: 6px;
+        }
+    </style>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('password_generator.static', filename='script.js') }}"></script>
+    
+    <!-- VISUAL SCRIPT: Slider Fill -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const slider = document.getElementById('password-length');
+            const lengthDisplay = document.getElementById('length-value');
+            
+            function updateSlider() {
+                const min = parseInt(slider.min);
+                const max = parseInt(slider.max);
+                const val = parseInt(slider.value);
+                const percentage = ((val - min) / (max - min)) * 100;
+                
+                slider.style.background = `linear-gradient(to right, 
+                    var(--accent) ${percentage}%, 
+                    var(--border) ${percentage}%)`;
+                
+                if (lengthDisplay) {
+                    lengthDisplay.textContent = val;
+                }
+            }
+
+            if (slider) {
+                updateSlider();
+                slider.addEventListener('input', updateSlider);
+            }
+        });
+    </script>
+{% endblock %}

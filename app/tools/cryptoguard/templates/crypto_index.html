@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block header %}CryptoGuard (AES){% endblock %}
+{% block content %}
+    
+    <div class="tool-wrapper" style="max-width: 700px;">
+        
+        <div style="text-align: center; margin-bottom: 40px;">
+            <div style="font-size: 3.5rem; color: var(--accent); margin-bottom: 12px;"><i class="fas fa-shield-alt"></i></div>
+            <h2>AES-GCM Encryption</h2>
+            <p style="color: var(--text-muted); font-size: 1.1rem;">Client-side text encryption & decryption.</p>
+        </div>
+
+        <div class="card-section" style="padding: 32px; border-radius: 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.08);">
+            <form id="crypto-form">
+                
+                <input type="hidden" id="operation-input" value="encrypt">
+
+                <!-- Premium Toggle Switch -->
+                <div class="operation-selector">
+                    <button type="button" id="btn-encrypt" class="op-btn active" data-op="encrypt">
+                        <i class="fas fa-lock"></i> Encrypt
+                    </button>
+                    <button type="button" id="btn-decrypt" class="op-btn" data-op="decrypt">
+                        <i class="fas fa-unlock"></i> Decrypt
+                    </button>
+                </div>
+
+                <div id="ajax-error-message" class="alert error" style="display: none; margin: 16px 0;"></div>
+
+                <!-- Plain Text / Ciphertext Input -->
+                <div class="form-group">
+                    <label for="text-data" id="text-data-label" style="font-weight: 600; margin-bottom: 10px;">Plain Text</label>
+                    <textarea id="text-data" class="form-control styled-textarea" rows="6" placeholder="Enter text to encrypt..."></textarea>
+                </div>
+
+                <!-- Secret Key -->
+                <div class="form-group">
+                    <label for="secret-key" style="font-weight: 600; margin-bottom: 10px;">Secret Key</label>
+                    <input type="password" id="secret-key" class="form-control styled-input" autocomplete="off" placeholder="Enter your secret passphrase">
+                </div>
+
+                <!-- Main Action Button -->
+                <button type="submit" id="submit-btn" class="btn-primary full-width">
+                    <i class="fas fa-lock"></i> Encrypt Text
+                </button>
+            </form>
+
+            <!-- Output Area -->
+            <div id="output-area" style="display: none; margin-top: 40px;">
+                <label id="output-label" style="font-weight: 600; margin-bottom: 10px; display: block;">Processed Output</label>
+                <textarea id="output-text" rows="6" class="form-control styled-textarea" readonly></textarea>
+                <button type="button" id="copy-btn" class="btn-secondary copy-output-btn">
+                    <i class="fas fa-copy"></i> Copy to Clipboard
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Premium CSS -->
+    <style>
+        /* Main card container already has inline shadow for emphasis */
+
+        /* Beautiful toggle switch */
+        .operation-selector {
+            display: flex;
+            background: var(--bg-body);
+            padding: 6px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            margin-bottom: 28px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .op-btn {
+            flex: 1;
+            padding: 14px 20px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 1.05rem;
+            cursor: pointer;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .op-btn.active {
+            background: var(--accent);
+            color: white;
+            box-shadow: 0 4px 12px rgba(99, 95, 199, 0.3);
+        }
+
+        .op-btn:hover:not(.active) {
+            background: rgba(99, 95, 199, 0.08);
+            color: var(--accent);
+        }
+
+        /* Input & Textarea Styling */
+        .styled-input,
+        .styled-textarea {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 16px;
+            font-size: 1rem;
+            background: var(--bg-card);
+            transition: border-color 0.2s;
+        }
+
+        .styled-input:focus,
+        .styled-textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(99, 95, 199, 0.15);
+        }
+
+        .styled-textarea::placeholder {
+            color: #aaa;
+        }
+
+        /* Full-width primary button */
+        .full-width {
+            width: 100%;
+            padding: 16px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 14px;
+            margin-top: 10px;
+            box-shadow: 0 6px 16px rgba(99, 95, 199, 0.3);
+            transition: all 0.3s;
+        }
+
+        .full-width:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(99, 95, 199, 0.4);
+        }
+
+        /* Copy button in output */
+        .copy-output-btn {
+            margin-top: 12px;
+            padding: 10px 20px;
+            background: transparent;
+            color: var(--text-main);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            float: right;
+        }
+
+        .copy-output-btn:hover {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        /* Labels */
+        .form-group label {
+            color: var(--text-main);
+            display: block;
+        }
+    </style>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('cryptoguard.static', filename='script.js') }}"></script>
+{% endblock %}

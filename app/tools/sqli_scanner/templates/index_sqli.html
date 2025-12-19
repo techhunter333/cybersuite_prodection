@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block header %}SQL Injection Scanner{% endblock %}
+
+{% block content %}
+<div class="tool-wrapper" style="max-width: 800px;">
+    
+    <div style="text-align: center; margin-bottom: 30px;">
+        <div style="font-size: 3rem; color: #ef4444; margin-bottom: 10px;"><i class="fas fa-bug"></i></div>
+        <h2>SQL Injection Scanner</h2>
+        <p style="color: var(--text-muted);">Test URL parameters for common SQL vulnerabilities.</p>
+    </div>
+    
+    <div class="alert error">
+        <i class="fas fa-exclamation-triangle"></i>
+        <strong>Warning:</strong> Use only on websites you own or have permission to test.
+    </div>
+
+    <div class="form-group" style="display: flex; gap: 10px;">
+        <input type="text" id="urlInput" class="form-control" placeholder="http://testphp.vulnweb.com/artists.php?artist=1">
+        <button id="scanBtn" class="btn-primary" style="width: auto; padding: 0 30px; background-color: #ef4444;">Scan</button>
+    </div>
+
+    <div id="results-area" style="display: none; margin-top: 30px;">
+        <h3>Scan Results</h3>
+        <div id="results-list"></div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('scanBtn').addEventListener('click', async () => {
+        const url = document.getElementById('urlInput').value.trim();
+        const btn = document.getElementById('scanBtn');
+        const resDiv = document.getElementById('results-list');
+        const resArea = document.getElementById('results-area');
+        
+        if(!url) return;
+        
+        btn.textContent = 'Scanning...';
+        btn.disabled = true;
+        resArea.style.display = 'none';
+        resDiv.innerHTML = '';
+
+        try {
+            const response = await fetch('scan', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ url: url })
+            });
+            const data = await response.json();
+            
+            resArea.style.display = 'block';
+            
+            if (data.error) {
+                resDiv.innerHTML = `<div class="alert error">${data.error}</div>`;
+            } else if (data.results.length === 0) {
+                resDiv.innerHTML = `<div class="alert success">No obvious vulnerabilities found (Basic Scan).</div>`;
+            } else {
+                let html = '<div style="display: grid; gap: 10px;">';
+                data.results.forEach(vuln => {
+                    html += `
+                        <div class="alert error" style="display: block;">
+                            <strong>Parameter:</strong> ${vuln.parameter}<br>
+                            <strong>Payload:</strong> <code>${vuln.payload}</code><br>
+                            <small>Triggered: "${vuln.signature}"</small>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                resDiv.innerHTML = html;
+            }
+
+        } catch (e) {
+            alert("Scan failed.");
+        } finally {
+            btn.textContent = 'Scan';
+            btn.disabled = false;
+        }
+    });
+</script>
+
+<style>
+    /* ONLY enhancement: pill shape + red glow for the "Scan" button */
+    #scanBtn {
+        padding: 16px 40px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        border-radius: 50px !important; /* Full pill shape */
+        background-color: #ef4444 !important; /* Keep original red */
+        box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3); /* Red glow */
+        transition: all 0.3s ease;
+    }
+
+    #scanBtn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 28px rgba(239, 68, 68, 0.4);
+        background-color: #dc2626 !important; /* Slightly darker red on hover */
+    }
+</style>
+{% endblock %}

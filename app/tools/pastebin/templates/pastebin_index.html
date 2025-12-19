@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+
+{% block header %}Secure Pastebin{% endblock %}
+{% block content %}
+    
+    <div class="tool-wrapper" style="max-width: 800px;">
+        
+        <!-- Header -->
+        <div style="text-align: center; margin-bottom: 40px;">
+            <div style="font-size: 3.8rem; color: var(--accent); margin-bottom: 16px;">
+                <i class="fas fa-paste"></i>
+            </div>
+            <h1 style="margin: 0; color: var(--text-main); font-size: 2.4rem; font-weight: 800;">Secure Pastebin</h1>
+            <p style="color: var(--text-muted); font-size: 1.2rem; margin-top: 8px;">
+                Your paste is encrypted in your browser <strong>*before*</strong> it's sent to the server.
+            </p>
+        </div>
+
+        <!-- The Form -->
+        <form id="paste-form">
+            
+            <!-- Paste Content -->
+            <div class="form-group">
+                <label for="paste_content" style="font-weight: 700; margin-bottom: 12px; display: block;">
+                    Paste Your Text Here:
+                </label>
+                <textarea id="paste_content" name="paste_content" class="form-control styled-textarea" rows="14" required placeholder="Enter your text, code snippet, or sensitive notes..."></textarea>
+            </div>
+
+            <!-- Expiration Dropdown -->
+            <div class="form-group">
+                <label for="paste_expiration" style="font-weight: 700; margin-bottom: 12px; display: block;">
+                    Expiration:
+                </label>
+                <select id="paste_expiration" name="paste_expiration" class="form-control styled-select">
+                    <option value="10_minutes">10 Minutes</option>
+                    <option value="1_hour">1 Hour</option>
+                    <option value="1_day" selected>1 Day</option>
+                    <option value="1_week">1 Week</option>
+                    <option value="never">Never (Burn after reading recommended)</option>
+                </select>
+            </div>
+
+            <!-- Create Button -->
+            <button type="submit" id="create-paste-btn" class="btn-primary full-width">
+                <i class="fas fa-link"></i> Create Secure Paste
+            </button>
+        </form>
+
+        <!-- Status & Result Area -->
+        <p id="form-status" class="info-message-pb" style="display: none;"></p>
+        
+        <div id="result-area" class="success-message-pb" style="display: none;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                <i class="fas fa-check-circle" style="font-size: 2rem; color: #10b981;"></i>
+                <div>
+                    <div style="font-weight: 800; font-size: 1.2rem; color: var(--text-main);">Paste created successfully!</div>
+                    <div style="color: var(--text-muted); font-size: 0.95rem;">Share this secret URL (it contains the decryption key)</div>
+                </div>
+            </div>
+            
+            <input type="text" id="generated-paste-url" class="form-control url-output" value="" readonly>
+            
+            <button type="button" id="copy-url-btn" class="btn-secondary full-width copy-url-btn">
+                <i class="fas fa-copy"></i> Copy URL to Clipboard
+            </button>
+        </div>
+
+        <!-- How-It-Works Section -->
+        <div class="instructions-pb">
+            <h4 style="color: var(--text-main); font-weight: 700; margin-bottom: 16px; font-size: 1.3rem;">
+                <i class="fas fa-info-circle" style="color: var(--accent); margin-right: 10px;"></i>
+                How Zero-Knowledge Encryption Works
+            </h4>
+            <ul>
+                <li><strong>Client-Side Encryption:</strong> A random 256-bit key is generated in your browser.</li>
+                <li><strong>Secure Processing:</strong> Your text is encrypted using AES-GCM <em>before</em> leaving your device.</li>
+                <li><strong>Server Blindness:</strong> Only encrypted data reaches the server — we cannot read your paste.</li>
+                <li><strong>Key in URL:</strong> The decryption key is appended after <code>#</code> in the URL and never sent to the server.</li>
+                <li><strong>Self-Destruct Option:</strong> Pastes can auto-expire or be burned after reading.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Premium Pastebin CSS -->
+    <style>
+        /* Monospace Textarea - Larger & Cleaner */
+        .styled-textarea {
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 1rem;
+            line-height: 1.7;
+            padding: 20px;
+            border-radius: 16px;
+            background: var(--bg-body);
+            border: 1px solid var(--border);
+            box-shadow: inset 0 4px 12px rgba(0,0,0,0.06);
+            resize: vertical;
+            transition: all 0.3s ease;
+        }
+
+        .styled-textarea:focus {
+            border-color: var(--accent);
+            background: var(--bg-card);
+            box-shadow: 0 0 0 4px rgba(99,102,241,0.15), inset 0 4px 12px rgba(0,0,0,0.06);
+        }
+
+        /* Styled Select */
+        .styled-select {
+            padding: 16px 18px;
+            font-size: 1rem;
+            border-radius: 14px;
+            background: var(--bg-body);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236366f1' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 18px center;
+            padding-right: 50px;
+        }
+
+        .styled-select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(99,102,241,0.15);
+        }
+
+        /* Primary Button */
+        #create-paste-btn {
+            padding: 18px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            border-radius: 16px;
+            box-shadow: 0 8px 20px rgba(99,102,241,0.3);
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        #create-paste-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 28px rgba(99,102,241,0.4);
+        }
+
+        /* Info Message */
+        .info-message-pb {
+            background: rgba(99,102,241,0.08);
+            border: 2px dashed var(--accent);
+            color: var(--accent);
+            padding: 20px;
+            border-radius: 16px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        /* Success Result Area */
+        .success-message-pb {
+            background: linear-gradient(to bottom, rgba(16,185,129,0.08), transparent);
+            border: 2px solid #10b981;
+            border-radius: 20px;
+            padding: 28px;
+            margin-top: 40px;
+            box-shadow: 0 8px 25px rgba(16,185,129,0.12);
+        }
+
+        .url-output {
+            padding: 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            text-align: center;
+            background: var(--bg-body);
+            border-radius: 14px;
+            margin: 16px 0;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .copy-url-btn {
+            padding: 16px;
+            font-weight: 700;
+            border-radius: 14px;
+            background: #10b981;
+            color: white;
+            border: none;
+            box-shadow: 0 6px 16px rgba(16,185,129,0.3);
+            transition: all 0.3s ease;
+        }
+
+        .copy-url-btn:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(16,185,129,0.4);
+        }
+
+        /* Instructions */
+        .instructions-pb {
+            margin-top: 60px;
+            padding: 32px;
+            background: var(--bg-body);
+            border-radius: 20px;
+            border-left: 5px solid var(--accent);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+        }
+
+        .instructions-pb h4 {
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+        }
+
+        .instructions-pb ul {
+            padding-left: 28px;
+            line-height: 1.9;
+            font-size: 1rem;
+        }
+
+        .instructions-pb li {
+            margin-bottom: 14px;
+        }
+
+        .instructions-pb code {
+            background: var(--bg-card);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+        }
+    </style>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('pastebin.static', filename='script.js') }}"></script>
+{% endblock %}

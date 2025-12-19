@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Create Account{% endblock %}
+{% block body_class %}auth-body{% endblock %}
+
+{% block auth_content %}
+<div class="split-container">
+    
+    <!-- LEFT SIDE: Branding -->
+    <div class="split-brand">
+        <div class="brand-content">
+            <i class="fas fa-shield-halved brand-icon-large"></i>
+            <h1>CyberSuite</h1>
+            <p>Your personal, zero-knowledge cybersecurity toolkit. Secure, private, and powerful.</p>
+        </div>
+    </div>
+
+    <!-- RIGHT SIDE: Scrollable Form -->
+    <div class="split-form">
+        <div class="auth-box">
+            <!-- [NEW] Mobile-Only Logo -->
+            <div class="mobile-brand">
+                <i class="fas fa-shield-halved"></i>
+            </div>
+            <h2>Create Account</h2>
+
+            <!-- Error Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" name="username" class="form-control" required placeholder="Choose a username">
+                    <span class="validation-error" id="username-error"></span>
+                </div>
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" name="email" class="form-control" required placeholder="you@example.com">
+                     <span class="validation-error" id="email-error"></span>
+                </div>
+                <div class="form-group">
+    <label>Password</label>
+    <div style="position: relative;">
+        <input type="password" name="password" id="passwordInput" class="form-control" required placeholder="••••••••" style="padding-right: 40px;">
+         <span class="validation-error" id="password-error"></span>
+        <i class="fas fa-eye" id="toggleRegPass" 
+           style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #6b7280;">
+        </i>
+    </div>
+
+                <!-- COMPACT REQUIREMENTS LIST -->
+                <div class="password-requirements" style="font-size: 0.8rem; margin-bottom: 20px;">
+                    <div style="font-weight: 600; margin-bottom: 8px;">Password strength:</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
+                        <span id="req-len" class="req-item"><i class="fas fa-circle"></i> 12+ Chars</span>
+                        <span id="req-num" class="req-item"><i class="fas fa-circle"></i> Number</span>
+                        <span id="req-up" class="req-item"><i class="fas fa-circle"></i> Upper</span>
+                        <span id="req-spec" class="req-item"><i class="fas fa-circle"></i> Symbol</span>
+                        <span id="req-low" class="req-item"><i class="fas fa-circle"></i> Lower</span>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary" style="margin-top: 10px;">Create Account</button>
+            </form>
+            
+            <p style="margin-top: 30px; text-align: center; color: #6b7280;">
+                Already have an account? <a href="{{ url_for('auth.login') }}" style="color: var(--accent); font-weight: 600;">Log in</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // 1. Unified Reference to the Password Input
+        const passwordInput = document.getElementById('passwordInput');
+        const toggleIcon = document.getElementById('toggleRegPass');
+
+        // 2. Password Toggle Logic
+        if (toggleIcon && passwordInput) {
+            toggleIcon.addEventListener('click', function () {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                // Toggle the eye / eye-slash icon
+                this.classList.toggle('fa-eye-slash');
+            });
+        }
+
+        // 3. Password Strength Logic
+        const reqs = {
+            len: { regex: /.{12,}/, id: 'req-len' },
+            up: { regex: /[A-Z]/, id: 'req-up' },
+            low: { regex: /[a-z]/, id: 'req-low' },
+            num: { regex: /[0-9]/, id: 'req-num' },
+            spec: { regex: /[!@#$%^&*(),.?":{}|<>]/, id: 'req-spec' }
+        };
+
+        if (passwordInput) {
+            passwordInput.addEventListener('input', function() {
+                const val = passwordInput.value;
+                
+                for (const key in reqs) {
+                    const item = reqs[key];
+                    const el = document.getElementById(item.id);
+                    const icon = el ? el.querySelector('i') : null;
+                    
+                    if (el && icon) {
+                        if (item.regex.test(val)) {
+                            // Valid State
+                            el.style.color = "#10b981"; // Green
+                            el.style.fontWeight = "600";
+                            icon.className = "fas fa-check-circle";
+                            icon.style.color = "#10b981";
+                        } else {
+                            // Invalid State
+                            el.style.color = "#6b7280"; // Gray
+                            el.style.fontWeight = "normal";
+                            icon.className = "fas fa-circle";
+                            icon.style.color = "#d1d5db";
+                        }
+                    }
+                }
+            });
+        }
+    });
+
+
+    
+</script>
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block header %}WHOIS Lookup{% endblock %}
+
+{% block content %}
+<div class="tool-wrapper" style="max-width: 800px;">
+    
+    <div style="text-align: center; margin-bottom: 30px;">
+        <div style="font-size: 3rem; color: var(--accent); margin-bottom: 10px;"><i class="fas fa-globe"></i></div>
+        <h2>WHOIS Domain Lookup</h2>
+        <p style="color: var(--text-muted);">Retrieve registration details for any domain.</p>
+    </div>
+
+    <div class="form-group" style="display: flex; gap: 10px;">
+        <input type="text" id="domainInput" class="form-control" placeholder="example.com">
+        <button id="lookupBtn" class="btn-primary" style="width: auto; padding: 0 30px;">Lookup</button>
+    </div>
+
+    <div id="result-area" style="display: none; margin-top: 30px;">
+        <h4 style="border-bottom: 1px solid var(--border); padding-bottom: 10px;">Registration Data</h4>
+        <div id="whois-table"></div>
+    </div>
+    
+    <div id="error-msg" class="alert error" style="display: none; margin-top: 20px;"></div>
+
+</div>
+
+<script>
+    document.getElementById('lookupBtn').addEventListener('click', async () => {
+        const domain = document.getElementById('domainInput').value.trim();
+        const btn = document.getElementById('lookupBtn');
+        const tableDiv = document.getElementById('whois-table');
+        const errorDiv = document.getElementById('error-msg');
+        
+        if(!domain) return;
+        
+        btn.textContent = 'Searching...';
+        btn.disabled = true;
+        document.getElementById('result-area').style.display = 'none';
+        errorDiv.style.display = 'none';
+
+        try {
+            const response = await fetch('query', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ domain: domain })
+            });
+            const data = await response.json();
+            
+            if(!response.ok) throw new Error(data.error);
+
+            // Build Table
+            let html = '<table style="width:100%">';
+            for (const [key, value] of Object.entries(data)) {
+                // Clean up key names (e.g., creation_date -> Creation Date)
+                const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                html += `<tr><th style="width:30%">${label}</th><td>${value}</td></tr>`;
+            }
+            html += '</table>';
+            
+            tableDiv.innerHTML = html;
+            document.getElementById('result-area').style.display = 'block';
+
+        } catch (e) {
+            errorDiv.textContent = e.message;
+            errorDiv.style.display = 'block';
+        } finally {
+            btn.textContent = 'Lookup';
+            btn.disabled = false;
+        }
+    });
+</script>
+
+<style>
+    /* ONLY enhancement: pill shape + glow for the "Lookup" button */
+    #lookupBtn {
+        padding: 16px 40px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        border-radius: 50px !important; /* Full pill shape */
+        box-shadow: 0 8px 20px rgba(99,102,241,0.3); /* Premium glow */
+        transition: all 0.3s ease;
+    }
+
+    #lookupBtn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 28px rgba(99,102,241,0.4);
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block header %}URL Shortener{% endblock %}
+{% block content %}
+    
+    <div class="tool-wrapper" style="max-width: 600px;">
+        
+        <div style="text-align: center; margin-bottom: 30px;">
+            <div style="font-size: 3rem; color: var(--accent); margin-bottom: 10px;"><i class="fas fa-link"></i></div>
+            <h2>URL Shortener</h2>
+            <p style="color: var(--text-muted);">Create short, shareable links.</p>
+        </div>
+
+        <!-- Input Form -->
+        <div class="form-group">
+            <label for="long-url-input">Enter a long URL to shorten:</label>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="long-url-input" class="form-control" placeholder="https://www.example.com/very/long/path">
+                <button type="button" id="shorten-btn" class="btn-primary" style="width: auto; padding: 0 30px;">Shorten</button>
+            </div>
+        </div>
+
+        <!-- Result Area -->
+        <div id="result-area" style="display: none; margin-top: 30px; text-align: center;">
+            <label>Your Short URL:</label>
+            <div style="position: relative; margin-top: 10px;">
+                <input type="text" id="short-url-output" class="form-control" readonly style="text-align: center; font-weight: bold;">
+                <button type="button" id="copy-btn" class="copy-btn" title="Copy">
+                    <i class="fas fa-copy"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="error-message" class="alert error" style="display: none; margin-top: 20px;"></div>
+    </div>
+
+    <style>
+        .copy-btn { position: absolute; top: 50%; right: 10px; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; }
+
+        /* Enhancement: Pill shape + glow for Shorten button */
+        #shorten-btn {
+            padding: 16px 40px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border-radius: 50px !important; /* Full pill shape */
+            box-shadow: 0 8px 20px rgba(99,102,241,0.3); /* Glow like other tools */
+            transition: all 0.3s ease;
+        }
+
+        #shorten-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 28px rgba(99,102,241,0.4);
+        }
+    </style>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const shortenBtn = document.getElementById('shorten-btn');
+            const longUrlInput = document.getElementById('long-url-input');
+            const resultArea = document.getElementById('result-area');
+            const shortUrlOutput = document.getElementById('short-url-output');
+            const copyBtn = document.getElementById('copy-btn');
+            const errorDiv = document.getElementById('error-message');
+
+            shortenBtn.addEventListener('click', async () => {
+                const longUrl = longUrlInput.value.trim();
+                if (!longUrl) return;
+
+                errorDiv.style.display = 'none';
+                shortenBtn.textContent = '...';
+
+                try {
+                    const response = await fetch('/s/shorten', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ long_url: longUrl })
+                    });
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        shortUrlOutput.value = data.short_url;
+                        resultArea.style.display = 'block';
+                    } else {
+                        throw new Error(data.error || 'Failed to shorten URL.');
+                    }
+                } catch (err) {
+                    errorDiv.textContent = err.message;
+                    errorDiv.style.display = 'block';
+                } finally {
+                    shortenBtn.textContent = 'Shorten';
+                }
+            });
+
+            copyBtn.addEventListener('click', () => {
+                navigator.clipboard.writeText(shortUrlOutput.value).then(() => {
+                    alert('Copied to clipboard!');
+                });
+            });
+        });
+    </script>
+{% endblock %}

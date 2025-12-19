@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CyberSuite{% endblock %}</title>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="light {% block body_class %}{% endblock %}">  <!-- [FIX] Default body class for theme sync -->
+
+    {% if current_user.is_authenticated %}
+    <div class="app-container">
+        
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-top">
+                <div class="brand">
+                    <i class="fas fa-shield-halved"></i> 
+                    <span class="brand-text">CyberSuite</span>
+                    <button class="mobile-close-btn" id="sidebarClose">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="user-profile">
+                    <div class="avatar-circle">{{ current_user.username[0] | upper }}</div>
+                    <div class="user-details">
+                        <span class="user-name">{{ current_user.username }}</span>
+                        <a href="{{ url_for('auth.profile') }}" class="edit-profile-link">Edit Profile</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-menu">
+                  <!-- [NEW] FAVORITES SECTION -->
+                {% if user_favorites %}
+                <div class="menu-title">Favorites</div>
+                <ul class="nav-links" style="margin-bottom: 20px;">
+                    {% for fav in user_favorites %}
+                    <li>
+                        <a href="{{ url_for(fav.tool_endpoint) }}" class="nav-link">
+                            <i class="fas fa-star" style="color: #fbbf24;"></i> <!-- Gold Star -->
+                            <span class="menu-text">{{ fav.tool_name }}</span>
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                <!-- [END NEW SECTION] -->
+                <div class="menu-title">Main Menu</div>
+                <ul class="nav-links">
+                   <li><a href="{{ url_for('main.dashboard') }}" class="nav-link {{ 'active' if request.endpoint == 'main.dashboard' else '' }}">
+                    <i class="fas fa-home"></i> <span class="menu-text">Dashboard</span>
+                   </a></li>
+                   <li><a href="{{ url_for('main.activity') }}" class="nav-link {{ 'active' if request.endpoint == 'main.activity' else '' }}">
+                    <i class="fas fa-history"></i> <span class="menu-text">Activity Log</span>
+                   </a></li>
+                </ul>
+                
+                <!-- [THE FIX] Theme Toggle is now a menu item -->
+                <div class="menu-title">System</div>
+                <ul class="nav-links">
+                    <li><a href="#" class="nav-link theme-toggle-link">
+                        <i class="fas fa-adjust"></i><span class="menu-text">Toggle Theme</span>
+                    </a></li>
+                </ul>
+            </div>
+
+            <div class="sidebar-footer">
+                <a href="{{ url_for('auth.logout') }}" class="nav-link logout-link">
+                    <i class="fas fa-sign-out-alt"></i> <span class="menu-text">Logout</span>
+                </a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-bar">
+                <button class="mobile-nav-toggle" id="mobileNavToggle"><i class="fas fa-bars"></i></button>
+                <div class="page-title">{% block header %}Dashboard{% endblock %}</div>
+                <div class="top-bar-right">
+                    <!-- [THE FIX] Placeholder for dashboard-specific actions -->
+                    {% block dashboard_actions %}{% endblock %}
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                {% block content %}{% endblock %}
+            </div>
+                {% block footer %}{% endblock %}
+        </main>
+        
+        <div class="overlay" id="mobileOverlay"></div>
+    </div>
+
+    {% else %}
+        {% block auth_content %}{% endblock %}
+    {% endif %}
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>  <!-- [FIX] All logic now here -->
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

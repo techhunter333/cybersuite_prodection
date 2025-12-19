@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block header %}JWT Debugger{% endblock %}
+
+{% block content %}
+<div class="tool-wrapper" style="max-width: 900px;">
+    
+    <div style="text-align: center; margin-bottom: 30px;">
+        <div style="font-size: 3rem; color: var(--accent); margin-bottom: 10px;"><i class="fas fa-id-badge"></i></div>
+        <h2>JWT Debugger</h2>
+        <p style="color: var(--text-muted);">Decode and inspect JSON Web Tokens (Client-Side).</p>
+    </div>
+
+    <div class="form-group">
+        <label>Paste Encoded JWT</label>
+        <textarea id="jwtInput" class="form-control" rows="3" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."></textarea>
+    </div>
+
+    <div id="result-area" style="display: none; margin-top: 30px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            
+            <!-- Header -->
+            <div>
+                <h4 style="color: #ef4444;">Header</h4>
+                <pre id="jwt-header" class="json-box"></pre>
+            </div>
+
+            <!-- Payload -->
+            <div>
+                <h4 style="color: #a855f7;">Payload</h4>
+                <pre id="jwt-payload" class="json-box"></pre>
+            </div>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <h4 style="color: #3b82f6;">Signature (Raw)</h4>
+            <pre id="jwt-signature" class="json-box" style="white-space: break-spaces;"></pre>
+        </div>
+    </div>
+
+    <div id="error-msg" class="alert error" style="display: none; margin-top: 20px;"></div>
+
+</div>
+
+<style>
+    .json-box {
+        background: var(--bg-body);
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        font-family: monospace;
+        font-size: 0.85rem;
+        overflow-x: auto;
+        min-height: 100px;
+    }
+</style>
+
+<script>
+    document.getElementById('jwtInput').addEventListener('input', function() {
+        const token = this.value.trim();
+        const errorDiv = document.getElementById('error-msg');
+        const resultArea = document.getElementById('result-area');
+        
+        if(!token) {
+            resultArea.style.display = 'none';
+            errorDiv.style.display = 'none';
+            return;
+        }
+
+        try {
+            const parts = token.split('.');
+            if(parts.length !== 3) throw new Error("Invalid JWT format. Must have 3 parts separated by dots.");
+
+            // Function to decode base64url
+            const decode = (str) => {
+                str = str.replace(/-/g, '+').replace(/_/g, '/');
+                switch (str.length % 4) {
+                    case 0: break;
+                    case 2: str += '=='; break;
+                    case 3: str += '='; break;
+                    default: throw new Error("Invalid Base64 string");
+                }
+                return decodeURIComponent(atob(str).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+            };
+
+            const header = JSON.parse(decode(parts[0]));
+            const payload = JSON.parse(decode(parts[1]));
+            const signature = parts[2];
+
+            document.getElementById('jwt-header').textContent = JSON.stringify(header, null, 4);
+            document.getElementById('jwt-payload').textContent = JSON.stringify(payload, null, 4);
+            document.getElementById('jwt-signature').textContent = signature;
+
+            resultArea.style.display = 'block';
+            errorDiv.style.display = 'none';
+
+        } catch (e) {
+            resultArea.style.display = 'none';
+            errorDiv.textContent = "Error: " + e.message;
+            errorDiv.style.display = 'block';
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+{% block body_class %}auth-body{% endblock %}
+
+{% block auth_content %}
+<div class="split-container">
+    
+    <!-- LEFT SIDE: Branding -->
+    <div class="split-brand">
+        <div class="brand-content">
+            <i class="fas fa-shield-halved brand-icon-large"></i>
+            <h1>Welcome Back</h1>
+            <p>Access your secure dashboard to manage and analyze threats.</p>
+        </div>
+    </div>
+
+    <!-- RIGHT SIDE: Form -->
+    <div class="split-form">
+        <div class="auth-box">
+            <!-- [NEW] Mobile-Only Logo -->
+            <div class="mobile-brand">
+                <i class="fas fa-shield-halved"></i>
+            </div>
+            <h2>Log In</h2>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST">
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" name="email" class="form-control" required placeholder="you@example.com">
+                </div>
+                <div class="form-group">
+    <label>Password</label>
+    <div style="position: relative;">
+        <input type="password" name="password" id="loginPass" class="form-control" required placeholder="••••••••" style="padding-right: 40px;">
+        <i class="fas fa-eye" id="toggleLoginPass" 
+           style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #6b7280;">
+        </i>
+    </div>
+</div>
+
+
+                <button type="submit" class="btn-primary">Sign In</button>
+            </form>
+            
+            <p style="margin-top: 30px; text-align: center; color: #6b7280;">
+                No account? <a href="{{ url_for('auth.register') }}" style="color: var(--accent); font-weight: 600;">Sign up</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Add this script at the bottom of the file -->
+<script>
+    const toggleLogin = document.getElementById('toggleLoginPass');
+    const passLogin = document.getElementById('loginPass');
+
+    if(toggleLogin && passLogin){
+        toggleLogin.addEventListener('click', function () {
+            const type = passLogin.getAttribute('type') === 'password' ? 'text' : 'password';
+            passLogin.setAttribute('type', type);
+            this.classList.toggle('fa-eye-slash');
+        });
+    }
+</script>
+{% endblock %}

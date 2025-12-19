@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block header %}Password Strength Checker{% endblock %}
+{% block content %}
+    
+    <div class="tool-wrapper" style="max-width: 650px;">
+        
+        <!-- Header -->
+        <div style="text-align: center; margin-bottom: 40px;">
+            <div style="font-size: 3.5rem; color: var(--accent); margin-bottom: 12px;"><i class="fas fa-key"></i></div>
+            <h2>Password Auditor</h2>
+            <p style="color: var(--text-muted); font-size: 1.1rem;">Real-time entropy and complexity scanner.</p>
+        </div>
+
+        <!-- Main Card -->
+        <div class="card-section" style="padding: 32px; border-radius: 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.08);">
+            <!-- Input -->
+            <div class="form-group">
+                <label for="password-input" style="font-weight: 600; margin-bottom: 10px; display: block;">Target Password</label>
+                <input type="password" id="password-input" class="form-control styled-input" placeholder="Type password to analyze..." autocomplete="new-password">
+            </div>
+
+            <!-- Strength Meter with Percentage Centered Inside Bar -->
+            <div class="strength-meter-container">
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" id="progress-bar-fill">
+                        <span id="strength-percentage-inside">0%</span>
+                    </div>
+                </div>
+                <p id="strength-text">Enter a password</p>
+            </div>
+
+            <!-- Checklist -->
+            <ul id="suggestions-list" class="suggestions-list">
+                <li id="length-check" class="not-met">At least 8 characters</li>
+                <li id="length-check-strong" class="not-met">At least 12 characters</li>
+                <li id="uppercase-check" class="not-met">Contains uppercase (A-Z)</li>
+                <li id="lowercase-check" class="not-met">Contains lowercase (a-z)</li>
+                <li id="number-check" class="not-met">Contains number (0-9)</li>
+                <li id="symbol-check" class="not-met">Contains symbol (!@#$)</li>
+            </ul>
+        </div>
+    </div>
+    
+    <!-- Updated CSS - Percentage Perfectly Centered Inside Bar -->
+    <style>
+        /* Input styling */
+        .styled-input {
+            width: 100%;
+            padding: 16px 18px;
+            font-size: 1.1rem;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: var(--bg-card);
+            transition: all 0.3s;
+        }
+        .styled-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(99, 95, 199, 0.2);
+        }
+
+        /* Strength Meter */
+        .strength-meter-container { 
+            margin: 30px 0 40px; 
+            text-align: center;
+        }
+
+        .progress-bar-container { 
+            height: 36px; 
+            background-color: var(--bg-body); 
+            border-radius: 18px; 
+            overflow: hidden;
+            box-shadow: inset 0 3px 10px rgba(0,0,0,0.12);
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .progress-bar-fill { 
+            height: 100%; 
+            width: 0%; 
+            border-radius: 18px; 
+            transition: width 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(to right, #ef4444, #f97316, #eab308, #10b981);
+            background-size: 300% 100%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Percentage text inside the bar - perfectly centered */
+        #strength-percentage-inside {
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 800;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Strength label below */
+        #strength-text {
+            font-weight: 800;
+            font-size: 1.6rem;
+            margin: 0;
+            color: var(--text-muted);
+            transition: color 0.4s ease;
+        }
+
+        /* Dynamic colors for strength text only */
+        #strength-text.weak { color: #ef4444; }
+        #strength-text.medium { color: #f97316; }
+        #strength-text.strong { color: #eab308; }
+        #strength-text.very-strong { color: #10b981; }
+
+        /* Checklist */
+        .suggestions-list { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 16px 20px; 
+            padding-top: 20px; 
+            border-top: 1px solid var(--border); 
+            list-style: none;
+            margin: 20px 0 0 0;
+            padding-left: 0;
+        }
+        .suggestions-list li { 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            font-size: 1rem; 
+            transition: color 0.3s ease;
+        }
+        
+        .suggestions-list li::before {
+            font-family: "Font Awesome 6 Free"; 
+            font-weight: 900;
+            font-size: 1.1rem;
+            width: 24px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .suggestions-list li.not-met { color: var(--text-muted); }
+        .suggestions-list li.not-met::before {
+            content: '\f00d'; /* X */
+            color: #ef4444;
+            opacity: 0.7;
+        }
+        .suggestions-list li.met {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+        .suggestions-list li.met::before {
+            content: '\f00c'; /* Check */
+            color: #10b981;
+            transform: scale(1.1);
+        }
+    </style>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('password_strength.static', filename='script.js') }}"></script>
+{% endblock %}

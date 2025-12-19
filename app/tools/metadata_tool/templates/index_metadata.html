@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block header %}Metadata (EXIF) Viewer{% endblock %}
+
+{% block content %}
+<div class="tool-wrapper" style="max-width: 900px;">
+    <div style="text-align: center; margin-bottom: 30px;">
+        <div style="font-size: 3rem; color: var(--accent); margin-bottom: 10px;"><i class="fas fa-camera"></i></div>
+        <h2>Image Metadata Viewer</h2>
+        <p style="color: var(--text-muted);">View and remove hidden EXIF data from photos.</p>
+    </div>
+
+    <!-- Upload Area -->
+    <div class="form-group" style="text-align: center; border: 2px dashed var(--border); padding: 40px; border-radius: 12px; cursor: pointer;" onclick="document.getElementById('fileInput').click()">
+        <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: var(--text-muted);"></i>
+        <p style="margin-top: 10px; font-weight: 600;">Click to Select Image (JPG/JPEG)</p>
+        <input type="file" id="fileInput" accept="image/jpeg" style="display: none;">
+    </div>
+
+    <!-- Results -->
+    <div id="result-area" style="display: none;">
+        <div style="display: flex; gap: 30px; flex-wrap: wrap; margin-top: 30px;">
+            <!-- Image Preview -->
+            <div style="flex: 1; min-width: 300px;">
+                <h4 style="margin-top: 0;">Preview</h4>
+                <img id="img-preview" style="max-width: 100%; border-radius: 8px; border: 1px solid var(--border);">
+                <button id="clean-btn" class="btn-primary" style="margin-top: 15px; background-color: #10b981;">
+                    <i class="fas fa-eraser"></i> Download Clean Image
+                </button>
+            </div>
+
+            <!-- Metadata Table -->
+            <div style="flex: 1.5; min-width: 300px;">
+                <h4 style="margin-top: 0;">Hidden Data Found</h4>
+                <div id="metadata-list" style="max-height: 400px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tbody id="exif-table-body"></tbody>
+                    </table>
+                </div>
+                <p id="no-data-msg" style="display: none; color: var(--text-muted); font-style: italic;">No EXIF data found.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
+<script>
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Reset UI
+        document.getElementById('result-area').style.display = 'block';
+        const tbody = document.getElementById('exif-table-body');
+        tbody.innerHTML = '';
+        document.getElementById('no-data-msg').style.display = 'none';
+
+        // 1. Show Preview
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('img-preview').src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+
+        // 2. Read EXIF
+        EXIF.getData(file, function() {
+            const allTags = EXIF.getAllTags(this);
+            if (Object.keys(allTags).length === 0) {
+                document.getElementById('no-data-msg').style.display = 'block';
+                return;
+            }
+
+            for (let tag in allTags) {
+                if (tag === 'thumbnail') continue; // Skip huge thumbnail data
+                
+                let row = tbody.insertRow();
+                let cellKey = row.insertCell(0);
+                let cellVal = row.insertCell(1);
+                
+                cellKey.textContent = tag;
+                cellKey.style.fontWeight = "600";
+                cellKey.style.padding = "8px";
+                cellKey.style.borderBottom = "1px solid var(--border)";
+                
+                cellVal.textContent = allTags[tag];
+                cellVal.style.padding = "8px";
+                cellVal.style.borderBottom = "1px solid var(--border)";
+                cellVal.style.wordBreak = "break-all";
+            }
+        });
+    });
+
+    // 3. Clean Image (Logic: Draw to canvas strips metadata)
+    document.getElementById('clean-btn').addEventListener('click', function() {
+        const img = document.getElementById('img-preview');
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        
+        // Exporting from canvas removes metadata
+        const cleanURL = canvas.toDataURL("image/jpeg", 0.95);
+        
+        const a = document.createElement('a');
+        a.href = cleanURL;
+        a.download = "clean_image.jpg";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    });
+</script>
+
+<style>
+    /* ONLY enhancement: pill shape + glow for the "Download Clean Image" button */
+    #clean-btn {
+        padding: 16px 32px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        border-radius: 50px !important; /* Full pill shape */
+        box-shadow: 0 8px 20px rgba(16,185,129,0.3); /* Green glow matching button color */
+        transition: all 0.3s ease;
+        background-color: #10b981 !important; /* Keep original green */
+    }
+
+    #clean-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 28px rgba(16,185,129,0.4);
+        background-color: #059669 !important;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,349 @@
+{% extends "base.html" %}
+
+{% block header %}Threat Indicator Lookup{% endblock %}
+{% block content %}
+    
+    <div class="tool-wrapper" style="max-width: 900px;">
+        
+        <div style="text-align: center; margin-bottom: 40px;">
+            <div style="font-size: 3.8rem; color: var(--accent); margin-bottom: 16px;">
+                <i class="fas fa-search-location"></i>
+            </div>
+            <h1 style="margin: 0; color: var(--text-main); font-size: 2.4rem; font-weight: 800;">Threat Indicator Lookup</h1>
+            <p style="color: var(--text-muted); font-size: 1.2rem; margin-top: 8px;">
+                Analyze File Hashes, URLs, IPs, and Domains via public APIs
+            </p>
+        </div>
+
+        <form id="lookup-form" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="indicatorType" style="font-weight: 700; margin-bottom: 12px; display: block;">
+                    Indicator Type
+                </label>
+                <select id="indicatorType" name="indicatorType" class="form-control styled-select">
+                    <option value="">-- Select Type --</option>
+                    <option value="file_hash">File Hash</option>
+                    <option value="file_upload">File Upload</option>
+                    <option value="url">URL</option>
+                    <option value="ip_address">IP Address</option>
+                    <option value="domain">Domain</option>
+                </select>
+            </div>
+            
+            <div id="value-input-area" class="form-group" style="display: none;">
+                <label for="indicatorValue" id="indicatorValueLabel" style="font-weight: 700; margin-bottom: 12px; display: block;">Indicator Value</label>
+                <input type="text" id="indicatorValue" name="indicatorValue" class="form-control styled-input" placeholder="Enter value...">
+            </div>
+            
+            <div id="file-input-area-lookup" class="form-group" style="display: none;">
+                <label for="indicatorFile" style="font-weight: 700; margin-bottom: 12px; display: block;">Select File</label>
+                <input type="file" id="indicatorFile" name="indicatorFile" class="form-control styled-file-input">
+                <p id="selected-lookup-filename" style="margin-top: 10px; color: var(--text-muted); font-size: 0.95rem; font-weight: 500;"></p>
+            </div>
+
+            <button type="submit" id="lookup-btn" class="btn-primary full-width" disabled>
+                <i class="fas fa-search"></i> Lookup Indicator
+            </button>
+        </form>
+        
+        <!-- Status Area -->
+        <div id="status-area-lookup" style="text-align: center; margin: 50px 0;">
+            <div id="loading-spinner-lookup" class="spinner" style="display: none;"></div>
+            <p id="error-message-lookup" class="alert error" style="display: none;"></p>
+        </div>
+        
+        <!-- Results Area -->
+        <div id="results-area-lookup" style="display: none;">
+            <!-- Fixed: Smaller text + responsive code box for long URLs -->
+            <h2 class="results-header">
+                Results for <span id="analyzed-indicator-type" style="color: var(--accent);"></span>: 
+                <code id="analyzed-indicator-value"></code>
+            </h2>
+            
+            <div id="file-upload-hashes-result" class="result-section" style="display:none;">
+                <h3><i class="fas fa-fingerprint"></i> Calculated Hashes</h3>
+                <div class="result-grid">
+                    <div><strong>MD5:</strong> <code id="file-md5-hash"></code></div>
+                    <div><strong>SHA1:</strong> <code id="file-sha1-hash"></code></div>
+                    <div><strong>SHA256:</strong> <code id="file-sha256-hash"></code></div>
+                </div>
+            </div>
+
+            <!-- ... rest of results unchanged ... -->
+            <div id="virustotal-result-area" class="result-section" style="display:none;">
+                <h3><i class="fas fa-shield-virus"></i> VirusTotal Analysis</h3>
+                <div id="vt-summary" class="result-grid">
+                    <div><strong>Verdict:</strong> <span id="vt-detection-ratio" class="vt-ratio">-</span></div>
+                    <div><strong>Last Scan:</strong> <span id="vt-scan-date"></span></div>
+                    <div><strong>Report:</strong> <a id="vt-permalink" href="#" target="_blank">View on VirusTotal</a></div>
+                </div>
+                <div id="vt-error" style="display:none; color: #ef4444;"></div>
+                
+                <details id="vt-details-toggle" style="margin-top: 16px;">
+                    <summary style="cursor: pointer; font-weight: 600;">Toggle Full VirusTotal JSON</summary>
+                    <pre id="virustotal-json-output" class="json-box"></pre>
+                </details>
+            </div>
+
+            <div id="urlhaus-result-area" class="result-section" style="display:none;">
+                <h3><i class="fas fa-exclamation-triangle"></i> URLhaus</h3>
+                <div class="result-grid">
+                    <div><strong>Status:</strong> <span id="urlhaus-status"></span></div>
+                    <div><strong>Threat:</strong> <span id="urlhaus-threat"></span></div>
+                    <div><strong>Tags:</strong> <span id="urlhaus-tags"></span></div>
+                    <div><strong>Reporter:</strong> <span id="urlhaus-reporter"></span></div>
+                    <div><a id="urlhaus-link" href="#" target="_blank">View on URLhaus</a></div>
+                </div>
+                <div id="urlhaus-error" style="display:none; color: #ef4444;"></div>
+            </div>
+
+            <div id="network-intel-area" class="result-section" style="display:none;">
+                <h3><i class="fas fa-network-wired"></i> Network Intelligence</h3>
+                
+                <div id="ptr-records-result" style="display:none;">
+                     <h4>PTR Records:</h4><ul id="ptr-records-list"></ul>
+                </div>
+                
+                 <div id="dns-records-result" style="display:none;">
+                     <h4>DNS Records:</h4><ul id="dns-records-list"></ul>
+                </div>
+
+                <div id="abuseipdb-result" style="display:none;">
+                    <h4>AbuseIPDB Report:</h4>
+                    <div class="result-grid">
+                        <div><strong>Confidence:</strong> <span id="abuse-confidence-score"></span></div>
+                        <div><strong>ISP:</strong> <span id="abuse-isp"></span></div>
+                        <div><strong>Country:</strong> <span id="abuse-country-code"></span></div>
+                        <div><strong>Usage:</strong> <span id="abuse-usage-type"></span></div>
+                        <div><strong>Public:</strong> <span id="abuse-is-public"></span></div>
+                        <div><strong>Ver:</strong> <span id="abuse-ip-version"></span></div>
+                        <div><strong>Whitelist:</strong> <span id="abuse-is-whitelisted"></span></div>
+                        <div><strong>Domain:</strong> <span id="abuse-domain"></span></div>
+                        <div><strong>Reports:</strong> <span id="abuse-total-reports"></span></div>
+                        <div><strong>Users:</strong> <span id="abuse-num-distinct-users"></span></div>
+                        <div><strong>Last:</strong> <span id="abuse-last-reported-at"></span></div>
+                    </div>
+                     <div id="abuse-error" style="display:none; color: #ef4444;"></div>
+                </div>
+                
+                <div id="whois-result" style="margin-top: 20px; display:none;">
+                    <details>
+                        <summary style="cursor: pointer; font-weight: 600;">Toggle WHOIS Information</summary>
+                        <pre id="whois-output" class="json-box"></pre>
+                    </details>
+                </div>
+            </div>
+        </div>
+        
+        <p class="disclaimer">
+            Disclaimer: Uses public APIs. Verify critical info.
+        </p>
+
+    </div>
+
+    <!-- Updated CSS - Fixed Long URL in Header -->
+    <style>
+        /* Results Header - Smaller Text + Responsive Code Box */
+        .results-header {
+            margin: 40px 0 24px;
+            font-size: 1.4rem;
+            text-align: center;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .results-header code#analyzed-indicator-value {
+            background: var(--bg-body);
+            padding: 10px 20px;
+            border-radius: 16px;
+            font-size: 0.95rem;
+            max-width: 100%;
+            word-break: break-all;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            border: 1px solid var(--border);
+        }
+
+        /* Rest of styles unchanged from previous premium version */
+        .styled-select {
+            padding: 18px 24px;
+            font-size: 1.1rem;
+            border-radius: 16px;
+            background: var(--bg-body);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236366f1' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 24px center;
+            padding-right: 60px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+
+        .styled-select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(99,102,241,0.15);
+        }
+
+        .styled-input {
+            padding: 18px 24px;
+            font-size: 1.1rem;
+            border-radius: 16px;
+            background: var(--bg-body);
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            transition: all 0.3s ease;
+        }
+
+        .styled-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(99,102,241,0.15);
+        }
+
+        .styled-file-input {
+            padding: 16px;
+            font-size: 1rem;
+            border-radius: 16px;
+            background: var(--bg-body);
+            border: 2px dashed var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .styled-file-input:hover {
+            border-color: var(--accent);
+            background: rgba(99,102,241,0.05);
+        }
+
+        .styled-file-input::file-selector-button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-right: 20px;
+            transition: 0.3s;
+        }
+
+        .styled-file-input::file-selector-button:hover {
+            background: var(--accent-hover);
+        }
+
+        #lookup-btn {
+            padding: 20px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            border-radius: 16px;
+            margin-top: 20px;
+            box-shadow: 0 8px 20px rgba(99,102,241,0.3);
+            transition: all 0.3s ease;
+        }
+
+        #lookup-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 28px rgba(99,102,241,0.4);
+        }
+
+        #lookup-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .result-section {
+            background: var(--bg-body);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            margin-bottom: 32px;
+            padding: 28px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+        }
+
+        .result-section h3 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+            color: var(--text-main);
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .result-grid > div {
+            background: var(--bg-card);
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .result-grid strong {
+            display: block;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+        }
+
+        .vt-ratio.malicious { color: #ef4444; font-weight: 800; }
+        .vt-ratio.clean { color: #10b981; font-weight: 800; }
+
+        .json-box {
+            background: var(--bg-card);
+            padding: 20px;
+            border-radius: 12px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+            margin-top: 16px;
+            border: 1px solid var(--border);
+        }
+
+        details summary {
+            cursor: pointer;
+            font-weight: 700;
+            color: var(--accent);
+            padding: 12px 0;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 6px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1.2s ease-in-out infinite;
+            margin: 40px auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .disclaimer {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-top: 50px;
+            padding: 20px;
+            background: var(--bg-body);
+            border-radius: 20px;
+            border: 1px dashed var(--border);
+            font-style: italic;
+        }
+    </style>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('threat_lookup.static', filename='script.js') }}"></script>
+{% endblock %}

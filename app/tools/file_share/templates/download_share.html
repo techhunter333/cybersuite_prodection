@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+{% block header %}Secure File Download{% endblock %}
+
+{% block content %}
+<div class="tool-wrapper" style="max-width: 600px; text-align: center;">
+    <div style="margin-bottom: 40px;">
+        <div style="font-size: 3.8rem; color: var(--accent); margin-bottom: 16px;">
+            <i class="fas fa-lock"></i>
+        </div>
+        <h2 style="margin: 0; color: var(--text-main); font-size: 2.4rem; font-weight: 800;">Secure File Transfer</h2>
+    </div>
+
+    <div id="status-box" class="status-box">
+        Initializing secure download...
+    </div>
+    
+    <div id="progress-container" style="display:none; margin-top: 32px;">
+        <div class="progress-bar-outer">
+            <div id="progress-bar">0%</div>
+        </div>
+    </div>
+    
+    <button id="download-btn" class="btn-primary full-width" style="display: none;">
+        <i class="fas fa-download"></i> Save Decrypted File
+    </button>
+</div>
+
+<style>
+    /* Status Box - Clean Card Style */
+    .status-box {
+        padding: 20px 24px;
+        border-radius: 20px;
+        background: var(--bg-body);
+        border: 1px solid var(--border);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+
+    .status-box.success {
+        background: rgba(16,185,129,0.1);
+        border-color: #10b981;
+        color: #059669;
+    }
+
+    .status-box.error {
+        background: rgba(239,68,68,0.1);
+        border-color: #ef4444;
+        color: #dc2626;
+    }
+
+    /* Progress Bar - Large Pill with Percentage */
+    .progress-bar-outer {
+        width: 100%;
+        height: 48px;
+        background: var(--bg-body);
+        border-radius: 50px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+
+    #progress-bar {
+        width: 0%;
+        height: 100%;
+        background: var(--accent);
+        border-radius: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        font-size: 1.1rem;
+        transition: width 0.4s ease;
+    }
+
+    /* Download Button - Full Width Pill with Glow */
+    #download-btn {
+        padding: 18px;
+        font-size: 1.2rem;
+        font-weight: 700;
+        border-radius: 50px;
+        box-shadow: 0 8px 20px rgba(99,102,241,0.3);
+        transition: all 0.3s ease;
+        margin-top: 32px;
+    }
+
+    #download-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 28px rgba(99,102,241,0.4);
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        const fileId = "{{ file_id }}";
+        const statusBox = document.getElementById('status-box');
+        const progressBar = document.getElementById('progress-bar');
+        const progressContainer = document.getElementById('progress-container');
+        const downloadBtn = document.getElementById('download-btn');
+        
+        // 1. Get Key from URL Hash
+        const hash = window.location.hash.substring(1);
+        if(!hash) {
+            statusBox.className = 'status-box error';
+            statusBox.textContent = "Error: Decryption key missing from URL.";
+            return;
+        }
+
+        try {
+            const jwkKey = JSON.parse(atob(hash));
+            const key = await window.crypto.subtle.importKey(
+                "jwk", jwkKey, { name: "AES-GCM" }, true, ["encrypt", "decrypt"]
+            );
+
+            // 2. Download Encrypted Blob
+            statusBox.textContent = "Downloading encrypted file...";
+            const response = await fetch(`/file-share/api/get-file/${fileId}`);
+            
+            if(!response.ok) throw new Error("File not found or expired.");
+            
+            const totalSize = parseInt(response.headers.get('Content-Length'), 10);
+            const reader = response.body.getReader();
+            let received = 0;
+            const chunks = [];
+
+            progressContainer.style.display = 'block';
+
+            while(true) {
+                const {done, value} = await reader.read();
+                if (done) break;
+                chunks.push(value);
+                received += value.length;
+                if (totalSize) {
+                    const percent = Math.round((received / totalSize) * 100);
+                    progressBar.style.width = percent + '%';
+                    progressBar.textContent = percent + '%';
+                }
+            }
+
+            const blob = new Blob(chunks);
+            const buffer = await blob.arrayBuffer();
+
+            // 3. Decrypt
+            statusBox.textContent = "Decrypting...";
+
+            const iv = buffer.slice(0, 12);
+            const data = buffer.slice(12);
+            
+            const decryptedBuffer = await window.crypto.subtle.decrypt(
+                { name: "AES-GCM", iv: new Uint8Array(iv) },
+                key,
+                data
+            );
+            
+            // 4. Create Download Link
+            const decryptedBlob = new Blob([decryptedBuffer]);
+            const url = URL.createObjectURL(decryptedBlob);
+            
+            let filename = "decrypted_file";
+            const disposition = response.headers.get('Content-Disposition');
+            if (disposition && disposition.indexOf('attachment') !== -1) {
+                const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+                const matches = filenameRegex.exec(disposition);
+                if (matches != null && matches[1]) { 
+                    filename = matches[1].replace(/['"]/g, '');
+                    if(filename.endsWith('.enc')) filename = filename.slice(0, -4);
+                }
+            }
+            
+            downloadBtn.onclick = () => {
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            };
+
+            statusBox.className = 'status-box success';
+            statusBox.textContent = "File Decrypted Successfully!";
+            progressContainer.style.display = 'none';  // Hide progress bar after completion
+            downloadBtn.style.display = 'inline-block';
+
+        } catch (error) {
+            statusBox.className = 'status-box error';
+            statusBox.textContent = "Decryption Failed: " + error.message;
+            progressContainer.style.display = 'none';
+        }
+    });
+</script>
+{% endblock %}

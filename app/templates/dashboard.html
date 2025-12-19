@@ -1,0 +1,386 @@
+{% extends "base.html" %}
+{% block header %}Security Dashboard{% endblock %}
+
+{# --- This injects the "System Online" badge into the top bar --- #}
+{% block dashboard_actions %}
+    <div class="dashboard-actions">
+
+        <!-- Search Bar -->
+        <div class="search-wrapper">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" id="toolSearch" class="search-input" placeholder="Search tools..." autocomplete="off">
+        </div>
+        
+        <span class="status-badge">
+            <span class="blinking-dot"></span> System Online
+        </span>
+    </div>
+{% endblock %}
+
+{% block content %}
+    
+    <h3 class="utilities-title">Available Utilities</h3>
+
+   <div class="tools-grid">
+        
+        <!-- Cipher Tool -->
+        <div class="card-wrapper" style="position: relative;">
+            <button class="fav-btn" data-endpoint="cipher_tool.index" data-name="Classical Cipher" onclick="toggleFav(this)">
+                <i class="{% if 'cipher_tool.index' in user_favorites|map(attribute='tool_endpoint')|list %}fas{% else %}far{% endif %} fa-star"></i>
+            </button>
+            <a href="{{ url_for('cipher_tool.index') }}" class="tool-card">
+                <div class="icon-box icon-purple"><i class="fas fa-user-secret"></i></div>
+                <h4>Classical Cipher</h4><p class="card-desc">Caesar & Substitution.</p>
+            </a>
+        </div>
+
+        <!-- CryptoGuard -->
+        <div class="card-wrapper" style="position: relative;">
+            <button class="fav-btn" data-endpoint="cryptoguard.index" data-name="CryptoGuard (AES)" onclick="toggleFav(this)">
+                <i class="{% if 'cryptoguard.index' in user_favorites|map(attribute='tool_endpoint')|list %}fas{% else %}far{% endif %} fa-star"></i>
+            </button>
+            <a href="{{ url_for('cryptoguard.index') }}" class="tool-card">
+                <div class="icon-box icon-blue"><i class="fas fa-shield-alt"></i></div>
+                <h4>CryptoGuard (AES)</h4><p class="card-desc">AES-GCM Encryption.</p>
+            </a>
+        </div>
+
+        <!-- Password Strength -->
+        <div class="card-wrapper" style="position: relative;">
+            <button class="fav-btn" data-endpoint="password_strength.index" data-name="Pass Strength" onclick="toggleFav(this)">
+                <i class="{% if 'password_strength.index' in user_favorites|map(attribute='tool_endpoint')|list %}fas{% else %}far{% endif %} fa-star"></i>
+            </button>
+            <a href="{{ url_for('password_strength.index') }}" class="tool-card">
+                <div class="icon-box icon-purple"><i class="fas fa-key"></i></div>
+                <h4>Pass Strength</h4><p class="card-desc">Analyze entropy.</p>
+            </a>
+        </div>
+
+        <!-- Password Generator -->
+        <div class="card-wrapper" style="position: relative;">
+            <button class="fav-btn" data-endpoint="password_generator.index" data-name="Pass Generator" onclick="toggleFav(this)">
+                <i class="{% if 'password_generator.index' in user_favorites|map(attribute='tool_endpoint')|list %}fas{% else %}far{% endif %} fa-star"></i>
+            </button>
+            <a href="{{ url_for('password_generator.index') }}" class="tool-card">
+                <div class="icon-box icon-green"><i class="fas fa-asterisk"></i></div>
+                <h4>Pass Generator</h4><p class="card-desc">Secure random passwords.</p>
+            </a>
+        </div>
+
+        <!-- Encoder/Decoder -->
+        <div class="card-wrapper" style="position: relative;">
+            <button class="fav-btn" data-endpoint="encoder_decoder.index" data-name="Encoder/Decoder" onclick="toggleFav(this)">
+                <i class="{% if 'encoder_decoder.index' in user_favorites|map(attribute='tool_endpoint')|list %}fas{% else %}far{% endif %} fa-star"></i>
+            </button>
+            <a href="{{ url_for('encoder_decoder.index') }}" class="tool-card">
+                <div class="icon-box icon-red"><i class="fas fa-exchange-alt"></i></div>
+                <h4>Encoder/Decoder</h4><p class="card-desc">Base64, URL, Hex.</p>
+            </a>
+        </div>
+
+        <!-- Steganography -->
+        <div class="card-wrapper" style="position: relative;">
+            <button class="fav-btn" data-endpoint="steganography.index" data-name="Steganography" onclick="toggleFav(this)">
+                <i class="{% if 'steganography.index' in user_favorites|map(attribute='tool_endpoint')|list %}fas{% else %}far{% endif %} fa-star"></i>
+            </button>
+            <a href="{{ url_for('steganography.index') }}" class="tool-card">
+                <div class="icon-box icon-blue"><i class="fas fa-eye-slash"></i></div>
+                <h4>Steganography</h4><p class="card-desc">Hide text in images.</p>
+            </a>
+        </div>
+
+        <!-- Pastebin -->
+        <div class="card-wrapper" style="position: relative;">
+            <button class="fav-btn" data-endpoint="pastebin.index_pastebin" data-name="Secure Pastebin" onclick="toggleFav(this)">
+                <i class="{% if 'pastebin.index_pastebin' in user_favorites|map(attribute='tool_endpoint')|list %}fas{% else %}far{% endif %} fa-star"></i>
+            </button>
+            <a href="{{ url_for('pastebin.index_pastebin') }}" class="tool-card">
+                <div class="icon-box icon-purple"><i class="fas fa-paste"></i></div>
+                <h4>Secure Pastebin</h4><p class="card-desc">Encrypted text sharing.</p>
+            </a>
+        </div>
+
+        <!-- Redirect Tracer -->
+        <div class="card-wrapper" style="position: relative;">
+            <button class="fav-btn" data-endpoint="redirect_checker.index" data-name="Redirect Tracer" onclick="toggleFav(this)">
+                <i class="{% if 'redirect_checker.index' in user_favorites|map(attribute='tool_endpoint')|list %}fas{% else %}far{% endif %} fa-star"></i>
+            </button>
+            <a href="{{ url_for('redirect_checker.index') }}" class="tool-card">
+                <div class="icon-box icon-purple"><i class="fas fa-route"></i></div>
+                <h4>Redirect Tracer</h4><p class="card-desc">Trace URL paths.</p>
+            </a>
+        </div>
+
+        <!-- Threat Lookup -->
+        <div class="card-wrapper" style="position: relative;">
+            <button class="fav-btn" data-endpoint="threat_lookup.index" data-name="Threat Lookup" onclick="toggleFav(this)">
+                <i class="{% if 'threat_lookup.index' in user_favorites|map(attribute='tool_endpoint')|list %}fas{% else %}far{% endif %} fa-star"></i>
+            </button>
+            <a href="{{ url_for('threat_lookup.index') }}" class="tool-card">
+                <div class="icon-box icon-green"><i class="fas fa-search"></i></div>
+                <h4>Threat Lookup</h4><p class="card-desc">IP/URL Intelligence.</p>
+            </a>
+        </div>
+
+        <!-- Threat News -->
+        <div class="card-wrapper" style="position: relative;">
+            <button class="fav-btn" data-endpoint="threat_news.index" data-name="Threat News" onclick="toggleFav(this)">
+                <i class="{% if 'threat_news.index' in user_favorites|map(attribute='tool_endpoint')|list %}fas{% else %}far{% endif %} fa-star"></i>
+            </button>
+            <a href="{{ url_for('threat_news.index') }}" class="tool-card">
+                <div class="icon-box icon-red"><i class="fas fa-newspaper"></i></div>
+                <h4>Threat News</h4><p class="card-desc">Security news aggregator.</p>
+            </a>
+        </div>
+
+        <!-- File Encryptor -->
+        <div class="card-wrapper" style="position: relative;">
+            <button class="fav-btn" data-endpoint="file_encryptor.index" data-name="File Encryptor" onclick="toggleFav(this)">
+                <i class="{% if 'file_encryptor.index' in user_favorites|map(attribute='tool_endpoint')|list %}fas{% else %}far{% endif %} fa-star"></i>
+            </button>
+            <a href="{{ url_for('file_encryptor.index') }}" class="tool-card">
+                <div class="icon-box icon-green"><i class="fas fa-file-archive"></i></div>
+                <h4>AES File Encryptor</h4><p class="card-desc">Encrypt entire files.</p>
+            </a>
+        </div>
+
+        <!-- Digital Signature -->
+        <div class="card-wrapper" style="position: relative;">
+            <button class="fav-btn" data-endpoint="digital_signature.index" data-name="Digital Signature" onclick="toggleFav(this)">
+                <i class="{% if 'digital_signature.index' in user_favorites|map(attribute='tool_endpoint')|list %}fas{% else %}far{% endif %} fa-star"></i>
+            </button>
+            <a href="{{ url_for('digital_signature.index') }}" class="tool-card">
+                <div class="icon-box icon-purple"><i class="fas fa-signature"></i></div>
+                <h4>Digital Signature</h4><p class="card-desc">HMAC signing.</p>
+            </a>
+        </div>
+
+        <!-- Hashing Utility -->
+        <div class="card-wrapper" style="position: relative;">
+            <button class="fav-btn" data-endpoint="hashing_utility.index" data-name="Hashing Utility" onclick="toggleFav(this)">
+                <i class="{% if 'hashing_utility.index' in user_favorites|map(attribute='tool_endpoint')|list %}fas{% else %}far{% endif %} fa-star"></i>
+            </button>
+            <a href="{{ url_for('hashing_utility.index') }}" class="tool-card">
+                <div class="icon-box icon-red"><i class="fas fa-hashtag"></i></div>
+                <h4>Hashing Utility</h4><p class="card-desc">Generate hashes.</p>
+            </a>
+        </div>
+
+        <!-- Hash Cracker -->
+        <div class="card-wrapper" style="position: relative;">
+            <button class="fav-btn" data-endpoint="hash_cracker.index" data-name="Hash Cracker" onclick="toggleFav(this)">
+                <i class="{% if 'hash_cracker.index' in user_favorites|map(attribute='tool_endpoint')|list %}fas{% else %}far{% endif %} fa-star"></i>
+            </button>
+            <a href="{{ url_for('hash_cracker.index') }}" class="tool-card">
+                <div class="icon-box icon-blue"><i class="fas fa-bolt"></i></div>
+                <h4>Hash Cracker</h4><p class="card-desc">Wordlist attack.</p>
+            </a>
+        </div>
+
+        <!-- QR Generator -->
+        <div class="card-wrapper" style="position: relative;">
+            <button class="fav-btn" data-endpoint="qr_generator.index" data-name="QR Generator" onclick="toggleFav(this)">
+                <i class="{% if 'qr_generator.index' in user_favorites|map(attribute='tool_endpoint')|list %}fas{% else %}far{% endif %} fa-star"></i>
+            </button>
+            <a href="{{ url_for('qr_generator.index') }}" class="tool-card">
+                <div class="icon-box icon-green"><i class="fas fa-qrcode"></i></div>
+                <h4>QR Code Generator</h4><p class="card-desc">Create QR codes.</p>
+            </a>
+        </div>
+
+        <!-- URL Shortener -->
+        <div class="card-wrapper" style="position: relative;">
+            <button class="fav-btn" data-endpoint="url_shortener.index" data-name="URL Shortener" onclick="toggleFav(this)">
+                <i class="{% if 'url_shortener.index' in user_favorites|map(attribute='tool_endpoint')|list %}fas{% else %}far{% endif %} fa-star"></i>
+            </button>
+            <a href="{{ url_for('url_shortener.index') }}" class="tool-card">
+                <div class="icon-box icon-blue"><i class="fas fa-link"></i></div>
+                <h4>URL Shortener</h4><p class="card-desc">Shorten links.</p>
+            </a>
+        </div>
+
+        <!-- File Share -->
+        <div class="card-wrapper" style="position: relative;">
+            <button class="fav-btn" data-endpoint="file_share.index" data-name="File Share" onclick="toggleFav(this)">
+                <i class="{% if 'file_share.index' in user_favorites|map(attribute='tool_endpoint')|list %}fas{% else %}far{% endif %} fa-star"></i>
+            </button>
+            <a href="{{ url_for('file_share.index') }}" class="tool-card">
+                <div class="icon-box icon-purple"><i class="fas fa-share-square"></i></div>
+                <h4>Secure File Share</h4><p class="card-desc">Encrypt & share.</p>
+            </a>
+        </div>
+
+        <!-- Subnet Calc -->
+        <div class="card-wrapper" style="position: relative;">
+            <button class="fav-btn" data-endpoint="subnet_calc.index" data-name="Subnet Calc" onclick="toggleFav(this)">
+                <i class="{% if 'subnet_calc.index' in user_favorites|map(attribute='tool_endpoint')|list %}fas{% else %}far{% endif %} fa-star"></i>
+            </button>
+            <a href="{{ url_for('subnet_calc.index') }}" class="tool-card">
+                <div class="icon-box icon-purple"><i class="fas fa-network-wired"></i></div>
+                <h4>Subnet Calculator</h4><p class="card-desc">IP/CIDR tools.</p>
+            </a>
+        </div>
+
+        <!-- Metadata Tool -->
+        <div class="card-wrapper" style="position: relative;">
+            <button class="fav-btn" data-endpoint="metadata_tool.index" data-name="Metadata Viewer" onclick="toggleFav(this)">
+                <i class="{% if 'metadata_tool.index' in user_favorites|map(attribute='tool_endpoint')|list %}fas{% else %}far{% endif %} fa-star"></i>
+            </button>
+            <a href="{{ url_for('metadata_tool.index') }}" class="tool-card">
+                <div class="icon-box icon-blue"><i class="fas fa-camera"></i></div>
+                <h4>Metadata Viewer</h4><p class="card-desc">View/Strip EXIF.</p>
+            </a>
+        </div>
+
+        <!-- WHOIS -->
+        <div class="card-wrapper" style="position: relative;">
+            <button class="fav-btn" data-endpoint="whois_lookup.index" data-name="WHOIS Lookup" onclick="toggleFav(this)">
+                <i class="{% if 'whois_lookup.index' in user_favorites|map(attribute='tool_endpoint')|list %}fas{% else %}far{% endif %} fa-star"></i>
+            </button>
+            <a href="{{ url_for('whois_lookup.index') }}" class="tool-card">
+                <div class="icon-box icon-purple"><i class="fas fa-globe"></i></div>
+                <h4>WHOIS Lookup</h4><p class="card-desc">Domain info.</p>
+            </a>
+        </div>
+
+        <!-- SQLi Scanner -->
+        <div class="card-wrapper" style="position: relative;">
+            <button class="fav-btn" data-endpoint="sqli_scanner.index" data-name="SQLi Tester" onclick="toggleFav(this)">
+                <i class="{% if 'sqli_scanner.index' in user_favorites|map(attribute='tool_endpoint')|list %}fas{% else %}far{% endif %} fa-star"></i>
+            </button>
+            <a href="{{ url_for('sqli_scanner.index') }}" class="tool-card">
+                <div class="icon-box icon-red"><i class="fas fa-bug"></i></div>
+                <h4>Basic SQLi Tester</h4><p class="card-desc">Test vulnerability.</p>
+            </a>
+        </div>
+
+        <!-- JWT Debugger -->
+        <div class="card-wrapper" style="position: relative;">
+            <button class="fav-btn" data-endpoint="jwt_debugger.index" data-name="JWT Debugger" onclick="toggleFav(this)">
+                <i class="{% if 'jwt_debugger.index' in user_favorites|map(attribute='tool_endpoint')|list %}fas{% else %}far{% endif %} fa-star"></i>
+            </button>
+            <a href="{{ url_for('jwt_debugger.index') }}" class="tool-card">
+                <div class="icon-box icon-purple"><i class="fas fa-id-badge"></i></div>
+                <h4>JWT Debugger</h4><p class="card-desc">Decode tokens.</p>
+            </a>
+        </div>
+
+    </div>
+
+    
+    
+    
+    
+        <!-- No Results Message -->
+    <div id="no-results" style="display: none; text-align: center; margin-top: 50px; color: var(--text-muted);">
+        <i class="fas fa-search" style="font-size: 2rem; margin-bottom: 10px;"></i>
+        <p>No tools found matching your search.</p>
+    </div>
+{% endblock %} 
+
+
+
+    {# --- ADD THIS ENTIRE BLOCK TO THE BOTTOM OF dashboard.html --- #}
+{% block footer %}
+    <footer class="dashboard-footer">
+        <div class="footer-copyright">
+            &copy; <span id="footer-year"></span> CyberSuite by Jaimin. All Rights Reserved.
+        </div>
+        <div class="footer-links">
+            <a href="{{ url_for('main.privacy_policy') }}">Privacy Policy</a>
+            <a href="{{ url_for('main.terms_of_service') }}">Terms of Service</a>
+        </div>
+    </footer>
+    <script>
+        // Set Footer Year
+        document.getElementById('footer-year').textContent = new Date().getFullYear();
+
+        // --- SEARCH FUNCTIONALITY ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('toolSearch');
+            // [FIX] Target the wrappers, not the links, so the whole block hides
+            const cards = document.querySelectorAll('.card-wrapper'); 
+            const noResults = document.getElementById('no-results'); // Ensure you have this div in HTML or remove this line
+            const resultCount = document.getElementById('result-count'); // Ensure you have this span or remove this line
+
+            if(searchInput) {
+                searchInput.addEventListener('keyup', (e) => {
+                    const term = e.target.value.toLowerCase();
+                    let visibleCount = 0;
+
+                    cards.forEach(card => {
+                        const title = card.querySelector('h4').textContent.toLowerCase();
+                        const desc = card.querySelector('.card-desc').textContent.toLowerCase();
+
+                        if(title.includes(term) || desc.includes(term)) {
+                            card.style.display = ""; // Reset to default
+                            visibleCount++;
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+
+                    // Optional: Show/Hide "No Results" message
+                    if (noResults) {
+                        noResults.style.display = (visibleCount === 0) ? 'block' : 'none';
+                    }
+                    
+                    // Optional: Show count
+                    if (resultCount) {
+                        if (term.length > 0) {
+                            resultCount.textContent = `${visibleCount} tools found`;
+                            resultCount.style.display = 'block';
+                        } else {
+                            resultCount.style.display = 'none';
+                        }
+                    }
+                });
+            }
+        });
+
+        // --- FAVORITES LOGIC ---
+        async function toggleFav(btn) {
+            // Prevent the click from bubbling up or following links
+            event.preventDefault();
+            event.stopPropagation();
+            
+            const endpoint = btn.dataset.endpoint;
+            const name = btn.dataset.name;
+            const icon = btn.querySelector('i');
+
+            // 1. Visual Toggle
+            const isFav = icon.classList.contains('fas'); // 'fas' is solid star
+            if (isFav) {
+                icon.classList.replace('fas', 'far'); // Make empty
+            } else {
+                icon.classList.replace('far', 'fas'); // Make solid
+                // Animation effect
+                icon.style.transform = 'scale(1.4)';
+                setTimeout(() => icon.style.transform = 'scale(1)', 200);
+            }
+
+            // 2. Server Request
+            try {
+                const response = await fetch('/api/toggle-favorite', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ endpoint: endpoint, name: name })
+                });
+                
+                if (response.ok) {
+                    // Reload page to update sidebar
+                    location.reload(); 
+                } else {
+                    console.error("Failed to save favorite");
+                }
+            } catch (e) {
+                console.error("Fav error", e);
+            }
+        }
+    </script>
+
+{% endblock %}
+
+{% block scripts %}
+    <!-- This block is for tool-specific scripts if needed. -->
+{% endblock %}

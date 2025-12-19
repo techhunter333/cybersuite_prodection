@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block header %}Hashing Utility{% endblock %}
+{% block content %}
+    
+    <div class="tool-wrapper" style="max-width: 700px;">
+        
+        <div style="text-align: center; margin-bottom: 40px;">
+            <div style="font-size: 3.8rem; color: var(--accent); margin-bottom: 16px;">
+                <i class="fas fa-hashtag"></i>
+            </div>
+            <h1 style="margin: 0; color: var(--text-main); font-size: 2.4rem; font-weight: 800;">Hashing Utility</h1>
+            <p style="color: var(--text-muted); font-size: 1.2rem; margin-top: 8px;">
+                Generate common cryptographic hashes
+            </p>
+        </div>
+
+        <form id="hashing-form"> 
+            <div class="form-group">
+                <label for="text-to-hash" style="font-weight: 700; margin-bottom: 12px; display: block;">Input Text</label>
+                <textarea id="text-to-hash" name="text_to_hash" class="form-control styled-textarea" rows="8" placeholder="Enter text here..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="algorithm-select" style="font-weight: 700; margin-bottom: 12px; display: block;">Algorithm</label>
+                <select id="algorithm-select" name="algorithm" class="form-control styled-select">
+                    <option value="SHA-256" selected>SHA-256</option>
+                    <option value="SHA-512">SHA-512</option>
+                    <option value="SHA-1">SHA-1</option>
+                    
+                </select>
+            </div>
+
+            <button type="submit" id="generate-hash-btn" class="btn-primary full-width">
+                <i class="fas fa-cogs"></i> Generate Hash
+            </button>
+        </form>
+
+        <div id="result-area" class="form-group result-section" style="display: none; margin-top: 40px;">
+            <h3 id="result-title" style="font-size: 1.4rem; margin-bottom: 16px; color: var(--text-main); font-weight: 700;">
+                Hashed Output:
+            </h3>
+            <div style="position: relative;">
+                <textarea id="hashed-output" rows="4" class="form-control styled-textarea" readonly style="font-family: 'JetBrains Mono', monospace; font-size: 1rem;"></textarea>
+                <button type="button" id="copy-hash-btn" class="copy-btn" title="Copy Hash" style="display: none;">
+                    <i class="fas fa-copy"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="error-message" class="alert error" style="display: none; margin-top: 20px;"></div>
+    </div>
+
+    <!-- Premium Hashing Utility CSS -->
+    <style>
+        /* Textarea & Select */
+        .styled-textarea {
+            padding: 18px 24px;
+            font-size: 1.1rem;
+            border-radius: 16px;
+            background: var(--bg-body);
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            resize: vertical;
+            transition: all 0.3s ease;
+        }
+
+        .styled-textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(99,102,241,0.15);
+        }
+
+        .styled-select {
+            padding: 18px 24px;
+            font-size: 1.1rem;
+            border-radius: 16px;
+            background: var(--bg-body);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236366f1' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 24px center;
+            padding-right: 60px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+
+        .styled-select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(99,102,241,0.15);
+        }
+
+        /* Generate Button */
+        #generate-hash-btn {
+            padding: 18px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            border-radius: 50px;
+            margin-top: 20px;
+            box-shadow: 0 8px 20px rgba(99,102,241,0.3);
+            transition: all 0.3s ease;
+        }
+
+        #generate-hash-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 28px rgba(99,102,241,0.4);
+        }
+
+        /* Result Area */
+        .result-section {
+            padding: 32px;
+            background: var(--bg-body);
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+        }
+
+        /* Copy Button */
+        .copy-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 12px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+
+        .copy-btn:hover {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+    </style>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('hashing_utility.static', filename='script.js') }}"></script>
+{% endblock %}

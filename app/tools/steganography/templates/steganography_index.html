@@ -1,0 +1,318 @@
+{% extends "base.html" %}
+
+{% block header %}Steganography Tool{% endblock %}
+{% block content %}
+    
+    <div class="tool-wrapper" style="max-width: 800px;">
+        
+        <!-- Header -->
+        <div style="text-align: center; margin-bottom: 40px;">
+            <div style="font-size: 3.8rem; color: var(--accent); margin-bottom: 16px;">
+                <i class="fas fa-image"></i>
+            </div>
+            <h1 style="margin: 0; color: var(--text-main); font-size: 2.4rem; font-weight: 800;">Adaptive Steganography</h1>
+            <p style="color: var(--text-muted); font-size: 1.2rem; margin-top: 8px;">Zero-Knowledge Image Encryption</p>
+        </div>
+
+        <form id="steganography-form" novalidate>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+
+            <!-- 1. Image Upload Section -->
+            <div class="image-upload-container">
+                <label style="font-weight: 700; font-size: 1.1rem; margin-bottom: 16px; display: block; color: var(--text-main);">
+                    <i class="fas fa-cloud-upload-alt"></i> Upload Cover Image (PNG/JPG)
+                </label>
+                
+                <input type="file" id="image_file" name="image_file" accept="image/png, image/jpeg, image/jpg" required>
+                
+                <!-- Preview Image -->
+                <div class="preview-container">
+                    <img id="image-preview-steg" src="#" alt="Image Preview">
+                    <canvas id="steg-canvas" style="display:none;"></canvas>
+                </div>
+            </div>
+
+            <!-- 2. Password Input -->
+            <div class="form-group">
+                <label for="steg-password" style="font-weight: 700; margin-bottom: 10px; display: block;">
+                    <i class="fas fa-key"></i> Encryption Password
+                </label>
+                <input type="password" id="steg-password" class="form-control styled-input" required placeholder="Enter strong password..." autocomplete="off">
+                <small style="color: var(--text-muted); display:block; margin-top:8px; font-size: 0.9rem;">
+                    This password protects the hidden data using AES-GCM encryption.
+                </small>
+            </div>
+
+            <!-- 3. Tabs (Encode / Decode) -->
+            <div class="tabs-steg">
+                <button type="button" class="tab-link-steg active" data-tab="encode-tab-steg" id="tab-encode-btn">
+                    <i class="fas fa-lock"></i> Encode (Hide)
+                </button>
+                <button type="button" class="tab-link-steg" data-tab="decode-tab-steg" id="tab-decode-btn">
+                    <i class="fas fa-unlock"></i> Decode (Reveal)
+                </button>
+            </div>
+            
+            <input type="hidden" id="operation-steg" value="encode">
+
+            <!-- TAB 1: ENCODE -->
+            <div id="encode-tab-steg" class="tab-content-steg active">
+                <div class="form-group">
+                    <label for="secret_message" style="font-weight: 700; margin-bottom: 10px;">Secret Message</label>
+                    <textarea id="secret_message" class="form-control styled-textarea" rows="6" placeholder="Type the secret message you want to hide inside the image..."></textarea>
+                    <p class="char-count">
+                        Available Capacity: <span id="capacity-count" style="color: var(--accent); font-weight: 800;">0</span> bytes
+                    </p>
+                </div>
+                <button type="submit" id="encode-btn" class="btn-primary full-width">
+                    <i class="fas fa-file-export"></i> Encrypt & Download Image
+                </button>
+            </div>
+
+            <!-- TAB 2: DECODE -->
+            <div id="decode-tab-steg" class="tab-content-steg">
+                <button type="submit" id="decode-btn" class="btn-primary full-width decode-action">
+                    <i class="fas fa-search"></i> Analyze & Reveal Hidden Message
+                </button>
+                
+                <div class="output-group-steg" id="decoded-message-area" style="display:none;">
+                    <label style="color: #059669; font-weight: 800; margin-bottom:12px; display:block; font-size: 1.1rem;">
+                        <i class="fas fa-check-circle"></i> Decrypted Message Found
+                    </label>
+                    <textarea id="decoded_message_text" class="form-control styled-textarea" rows="6" readonly placeholder="Hidden message will appear here..."></textarea>
+                </div>
+            </div>
+        </form>
+
+        <!-- Status / Error Area -->
+        <div id="status-area-steg" style="margin-top: 30px; text-align: center;">
+            <p id="status-message" style="color: var(--accent); font-weight: 700; font-size: 1.1rem;"></p>
+            <p id="error-message-steg" class="alert error" style="display: none;"></p>
+        </div>
+        
+        <!-- Info Footer -->
+        <div class="instructions-steg">
+            <h4 style="color: var(--text-main); font-weight: 700; margin-bottom: 12px;">
+                <i class="fas fa-info-circle" style="color: var(--accent);"></i> How It Works
+            </h4>
+            <ul>
+                <li><strong>Zero-Knowledge:</strong> All processing happens 100% in your browser — no data leaves your device.</li>
+                <li><strong>Security:</strong> Your message is encrypted with AES-GCM before being embedded via LSB steganography.</li>
+                <li><strong>Adaptive:</strong> Uses least significant bits intelligently without visible distortion.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Premium Steganography CSS -->
+    <style>
+        /* Image Upload Area - Premium Drop Zone */
+        .image-upload-container {
+            background: var(--bg-body);
+            border: 3px dashed var(--border);
+            border-radius: 20px;
+            padding: 40px 20px;
+            text-align: center;
+            transition: all 0.4s ease;
+            margin-bottom: 32px;
+            position: relative;
+        }
+
+        .image-upload-container:hover {
+            border-color: var(--accent);
+            background: rgba(99,102,241,0.05);
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(99,102,241,0.15);
+        }
+
+        .image-upload-container.drag-over {
+            border-color: var(--accent);
+            background: rgba(99,102,241,0.1);
+        }
+
+        /* Custom File Input */
+        input[type="file"] {
+            width: 100%;
+            padding: 16px;
+            background: var(--bg-card);
+            border: 2px dashed var(--border);
+            border-radius: 14px;
+            color: var(--text-main);
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        input[type="file"]:hover {
+            border-color: var(--accent);
+            background: rgba(99,102,241,0.05);
+        }
+
+        input[type="file"]::file-selector-button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-right: 16px;
+            transition: 0.3s;
+        }
+
+        input[type="file"]::file-selector-button:hover {
+            background: var(--accent-hover);
+        }
+
+        /* Image Preview */
+        .preview-container {
+            margin-top: 24px;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+            display: inline-block;
+            max-width: 100%;
+        }
+
+        #image-preview-steg {
+            max-width: 100%;
+            max-height: 500px;
+            display: block;
+            border-radius: 16px;
+        }
+
+        /* Styled Inputs & Textarea */
+        .styled-input,
+        .styled-textarea {
+            padding: 16px 18px;
+            font-size: 1rem;
+            border-radius: 14px;
+            background: var(--bg-body);
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.05);
+        }
+
+        .styled-input:focus,
+        .styled-textarea:focus {
+            border-color: var(--accent);
+            background: var(--bg-card);
+            box-shadow: 0 0 0 4px rgba(99,102,241,0.15), inset 0 2px 6px rgba(0,0,0,0.05);
+        }
+
+        /* Premium Tabs */
+        .tabs-steg {
+            display: flex;
+            background: var(--bg-body);
+            padding: 8px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            margin: 32px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+
+        .tab-link-steg {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 1.05rem;
+            cursor: pointer;
+            border-radius: 12px;
+            transition: all 0.4s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .tab-link-steg:hover {
+            color: var(--text-main);
+            background: rgba(99,102,241,0.08);
+        }
+
+        .tab-link-steg.active {
+            background: var(--accent);
+            color: white;
+            box-shadow: 0 6px 16px rgba(99,102,241,0.4);
+        }
+
+        /* Buttons */
+        .full-width {
+            width: 100%;
+            padding: 18px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border-radius: 14px;
+            margin-top: 16px;
+            box-shadow: 0 6px 16px rgba(99,102,241,0.3);
+            transition: all 0.3s ease;
+        }
+
+        .full-width:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 24px rgba(99,102,241,0.4);
+        }
+
+        .decode-action {
+            background: #10b981 !important;
+            box-shadow: 0 6px 16px rgba(16,185,129,0.3);
+        }
+
+        .decode-action:hover {
+            box-shadow: 0 12px 24px rgba(16,185,129,0.4);
+        }
+
+        /* Capacity Counter */
+        .char-count {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-top: 12px;
+            text-align: right;
+            font-weight: 500;
+        }
+
+        /* Decoded Output */
+        .output-group-steg {
+            margin-top: 32px;
+            padding: 24px;
+            background: linear-gradient(to bottom, rgba(16,185,129,0.05), transparent);
+            border: 2px solid #10b981;
+            border-radius: 16px;
+            box-shadow: 0 6px 20px rgba(16,185,129,0.1);
+        }
+
+        /* Instructions */
+        .instructions-steg {
+            margin-top: 50px;
+            padding: 28px;
+            background: var(--bg-body);
+            border-radius: 16px;
+            border-left: 4px solid var(--accent);
+        }
+
+        .instructions-steg h4 {
+            margin-bottom: 16px;
+            font-size: 1.2rem;
+        }
+
+        .instructions-steg ul {
+            padding-left: 24px;
+            line-height: 1.8;
+            color: var(--text-main);
+        }
+
+        .instructions-steg li {
+            margin-bottom: 10px;
+        }
+
+        .instructions-steg strong {
+            color: var(--accent);
+        }
+    </style>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('steganography.static', filename='script.js') }}"></script>
+{% endblock %}
