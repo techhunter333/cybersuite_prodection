@@ -145,15 +145,6 @@ def create_app():
     
     
     
- # [TEMPORARY DATABASE SETUP ROUTE]
-    @app.route('/setup-database')
-    def setup_database():
-        try:
-            with app.app_context():
-                db.create_all()
-            return "Database Tables Created Successfully!"
-        except Exception as e:
-            return f"Error creating database: {str(e)}"
 
     
     
