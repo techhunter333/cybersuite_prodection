@@ -12,7 +12,7 @@
         </div>
         
         <span class="status-badge">
-            <span class="blinking-dot"></span> System Online
+            <span class="blinking-dot"></span> Online
         </span>
     </div>
 {% endblock %}
@@ -34,7 +34,8 @@
             </a>
         </div>
 
-        <!-- CryptoGuard -->
+
+         <!-- CryptoGuard -->
         <div class="card-wrapper" style="position: relative;">
             <button class="fav-btn" data-endpoint="cryptoguard.index" data-name="CryptoGuard (AES)" onclick="toggleFav(this)">
                 <i class="{% if 'cryptoguard.index' in user_favorites|map(attribute='tool_endpoint')|list %}fas{% else %}far{% endif %} fa-star"></i>
@@ -264,6 +265,8 @@
                 <h4>JWT Debugger</h4><p class="card-desc">Decode tokens.</p>
             </a>
         </div>
+
+       
 
     </div>
 

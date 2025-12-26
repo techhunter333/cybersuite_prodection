@@ -1,13 +1,15 @@
 from flask import Flask
 from dotenv import load_dotenv
 import os
-from .extensions import db, login_manager, limiter
+from .extensions import db, login_manager, limiter, mail
 from .models import User
+from flask_dance.contrib.google import make_google_blueprint, google
 
 def create_app():
     app = Flask(__name__)
     
-   
+    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1' 
+    os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = '1'
     
     # Get the directory where THIS file (__init__.py) is located: app/
     basedir = os.path.abspath(os.path.dirname(__file__))
@@ -31,14 +33,28 @@ def create_app():
     app.config['VIRUSTOTAL_API_KEY'] = os.getenv('VIRUSTOTAL_API_KEY')
     app.config['ABUSEIPDB_API_KEY'] = os.getenv('ABUSEIPDB_API_KEY')
     
+     # [NEW] Email Config
+    app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
+    app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT') or 587)
+    app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS') == 'True'
+    app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+    app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+    app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_USERNAME') 
+    
     # Debug print to verify
     print(f"DEBUG: VT Key Loaded? {'Yes' if app.config['VIRUSTOTAL_API_KEY'] else 'NO'}")
+    print(f"DEBUG MAIL: Server={app.config['MAIL_SERVER']}, Port={app.config['MAIL_PORT']}")
 
     
     # Session Security (Prevents Cookie Hijacking)
     app.config['SESSION_COOKIE_HTTPONLY'] = True # Prevents JavaScript access to cookies (XSS protection)
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax' # Prevents CSRF
     app.config['SESSION_COOKIE_SECURE'] = False  # Set to TRUE if you use HTTPS (Production)
+    
+    
+    
+    
+    
 
     # Initialize Extensions
     db.init_app(app)
@@ -46,6 +62,7 @@ def create_app():
     login_manager.login_view = 'auth.login'
     login_manager.login_message = "Please log in to access this page."
     login_manager.login_message_category = "error"
+    mail.init_app(app)
     
     # Initialize Rate Limiter
     limiter.init_app(app)
@@ -106,9 +123,23 @@ def create_app():
     app.register_blueprint(sqli_bp)
     app.register_blueprint(jwt_bp)
 
+    
 
 
     
+    
+    google_bp = make_google_blueprint(
+        client_id=os.getenv("GOOGLE_OAUTH_CLIENT_ID"),
+        client_secret=os.getenv("GOOGLE_OAUTH_CLIENT_SECRET"),
+        # Use the full URL scopes to match what Google returns
+        scope=[
+            "https://www.googleapis.com/auth/userinfo.email",
+            "https://www.googleapis.com/auth/userinfo.profile",
+            "openid"
+        ],
+        redirect_url="/auth/google/authorized"
+    )
+    app.register_blueprint(google_bp, url_prefix="/auth/login") 
     
     
    
